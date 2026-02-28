@@ -81,9 +81,9 @@ export async function fetchGdeltArticles(
     console.warn('[GDELT] Direct API failed:', (err as Error).message);
   }
 
-  // 3. Fallback: comprehensive intelligence data
+  // 3. Fallback: conflict-specific intelligence data
   console.warn('[GDELT] Using fallback data for query:', query);
-  return { articles: generateFallbackArticles() };
+  return { articles: generateFallbackArticles(query) };
 }
 
 // ============================================================
@@ -121,9 +121,9 @@ export async function fetchGdeltTimeline(query = 'iran'): Promise<ApiData> {
     console.warn('[GDELT Timeline] Direct failed:', (err as Error).message);
   }
 
-  // 3. Fallback
-  console.warn('[GDELT Timeline] Using fallback data');
-  return { timeline: [{ data: generateFallbackTimeline() }] };
+  // 3. Fallback — varies by conflict
+  console.warn('[GDELT Timeline] Using fallback data for:', query);
+  return { timeline: [{ data: generateFallbackTimeline(query) }] };
 }
 
 // ============================================================
@@ -162,9 +162,9 @@ export async function fetchGdeltTone(query = 'iran'): Promise<ApiData> {
     console.warn('[GDELT Tone] Direct failed:', (err as Error).message);
   }
 
-  // 3. Fallback
-  console.warn('[GDELT Tone] Using fallback data');
-  return { timeline: [{ data: generateFallbackTone() }] };
+  // 3. Fallback — varies by conflict
+  console.warn('[GDELT Tone] Using fallback data for:', query);
+  return { timeline: [{ data: generateFallbackTone(query) }] };
 }
 
 // ============================================================

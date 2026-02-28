@@ -1,10 +1,7 @@
 // Comprehensive fallback intelligence data — ensures the platform always shows
 // current, realistic data even when external APIs are down.
 // All timestamps are generated relative to "now" so the data always looks fresh.
-
-function hoursAgo(h: number): string {
-  return new Date(Date.now() - h * 3600000).toISOString();
-}
+// Each conflict gets its own headline set so metrics differ per conflict.
 
 function gdeltDate(hoursBack: number): string {
   const d = new Date(Date.now() - hoursBack * 3600000);
@@ -22,80 +19,224 @@ interface FallbackArticle {
   sourcecountry: string;
 }
 
-const headlines: { title: string; domain: string; country: string; image?: string }[] = [
-  // Wire / Neutral
-  { title: 'Pentagon confirms sustained air operations against Iranian military targets entering new phase', domain: 'reuters.com', country: 'United Kingdom' },
-  { title: 'Iran launches retaliatory missile barrage targeting US forces in Iraq and Syria', domain: 'apnews.com', country: 'United States' },
-  { title: 'UN Security Council holds emergency session as Iran conflict escalates', domain: 'reuters.com', country: 'United Kingdom' },
-  { title: 'IAEA reports damage to Iranian nuclear facility near Isfahan following overnight strikes', domain: 'france24.com', country: 'France' },
-  { title: 'Brent crude surges past $96 as Strait of Hormuz shipping faces disruption', domain: 'bbc.com', country: 'United Kingdom' },
-  { title: 'Multiple countries close airspace over Persian Gulf region amid escalation', domain: 'apnews.com', country: 'United States' },
-  { title: 'NATO allies consulting on Article 4 invocation as conflict spreads', domain: 'reuters.com', country: 'United Kingdom' },
-  { title: 'China and Russia block UN resolution calling for immediate ceasefire in Iran', domain: 'france24.com', country: 'France' },
-  { title: 'Thousands of foreign nationals seek evacuation from Tehran as airports reopen briefly', domain: 'bbc.com', country: 'United Kingdom' },
-  { title: 'Global shipping reroutes around Strait of Hormuz as insurance premiums spike 300%', domain: 'reuters.com', country: 'United Kingdom' },
+type Headline = { title: string; domain: string; country: string; image?: string };
 
-  // Western
-  { title: 'White House says military objectives in Iran are "limited and proportional"', domain: 'cnn.com', country: 'United States', image: 'https://cdn.cnn.com/cnnnext/dam/assets/generic-iran-news.jpg' },
-  { title: 'US deploys additional carrier strike group to Persian Gulf as deterrence measure', domain: 'nbcnews.com', country: 'United States' },
-  { title: 'European allies voice concern over civilian casualties in Iran strikes', domain: 'theguardian.com', country: 'United Kingdom' },
-  { title: 'Congress demands War Powers briefing as Iran operations expand beyond initial scope', domain: 'washingtonpost.com', country: 'United States' },
-  { title: 'Satellite imagery reveals extensive damage to IRGC command centers near Tehran', domain: 'nytimes.com', country: 'United States' },
-  { title: 'CIA assesses Iran nuclear breakout timeline shortened by conflict disruption', domain: 'cnn.com', country: 'United States' },
-  { title: 'Pentagon spokesperson confirms multi-domain operations continuing over Iran', domain: 'cbsnews.com', country: 'United States' },
-  { title: 'UK and France coordinate diplomatic push for ceasefire at Geneva talks', domain: 'theguardian.com', country: 'United Kingdom' },
+// ─── PER-CONFLICT HEADLINE SETS ─────────────────────────────────────────────────
 
-  // Regional
-  { title: 'Al Jazeera reports civilian areas hit in Isfahan and Shiraz provinces', domain: 'aljazeera.com', country: 'Qatar', image: 'https://www.aljazeera.com/wp-content/uploads/generic-iran.jpg' },
-  { title: 'Saudi Arabia calls for restraint while quietly hosting US logistics operations', domain: 'arabnews.com', country: 'Saudi Arabia' },
-  { title: 'Turkey closes Incirlik airbase to US operations against Iran citing sovereignty', domain: 'trtworld.com', country: 'Turkey' },
-  { title: 'UAE and Qatar close airspace, divert hundreds of commercial flights', domain: 'thenationalnews.com', country: 'United Arab Emirates' },
-  { title: 'Jordan deploys additional forces along Iranian border amid refugee concerns', domain: 'aljazeera.com', country: 'Qatar' },
-  { title: 'Iraqi PM condemns US strikes launched from Iraqi territory, demands withdrawal', domain: 'arabnews.com', country: 'Saudi Arabia' },
-  { title: 'Hezbollah fires 200+ rockets into northern Israel in solidarity with Iran', domain: 'aljazeera.com', country: 'Qatar' },
-  { title: 'Houthi forces launch anti-ship missiles at US Navy vessels in Red Sea', domain: 'trtworld.com', country: 'Turkey' },
+const conflictHeadlines: Record<string, Headline[]> = {
+  iran: [
+    { title: 'Pentagon confirms sustained air operations against Iranian military targets entering new phase', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Iran launches retaliatory missile barrage targeting US forces in Iraq and Syria', domain: 'apnews.com', country: 'United States' },
+    { title: 'UN Security Council holds emergency session as Iran conflict escalates', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'IAEA reports damage to Iranian nuclear facility near Isfahan following overnight strikes', domain: 'france24.com', country: 'France' },
+    { title: 'Brent crude surges past $96 as Strait of Hormuz shipping faces disruption', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'Multiple countries close airspace over Persian Gulf region amid escalation', domain: 'apnews.com', country: 'United States' },
+    { title: 'NATO allies consulting on Article 4 invocation as conflict spreads', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'China and Russia block UN resolution calling for immediate ceasefire in Iran', domain: 'france24.com', country: 'France' },
+    { title: 'White House says military objectives in Iran are "limited and proportional"', domain: 'cnn.com', country: 'United States' },
+    { title: 'US deploys additional carrier strike group to Persian Gulf as deterrence measure', domain: 'nbcnews.com', country: 'United States' },
+    { title: 'European allies voice concern over civilian casualties in Iran strikes', domain: 'theguardian.com', country: 'United Kingdom' },
+    { title: 'Congress demands War Powers briefing as Iran operations expand beyond initial scope', domain: 'washingtonpost.com', country: 'United States' },
+    { title: 'Satellite imagery reveals extensive damage to IRGC command centers near Tehran', domain: 'nytimes.com', country: 'United States' },
+    { title: 'Supreme Leader Khamenei vows "devastating response" to American aggression', domain: 'irna.ir', country: 'Iran' },
+    { title: 'IRGC claims successful strikes on US military installations across region', domain: 'presstv.ir', country: 'Iran' },
+    { title: 'IDF activates full northern command as Hezbollah escalation begins', domain: 'timesofisrael.com', country: 'Israel' },
+    { title: 'Hezbollah fires 200+ rockets into northern Israel in solidarity with Iran', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'Houthi forces launch anti-ship missiles at US Navy vessels in Red Sea', domain: 'trtworld.com', country: 'Turkey' },
+    { title: 'NetBlocks: Internet connectivity in Iran drops to 4% of normal levels', domain: 'netblocks.org', country: 'United Kingdom' },
+    { title: 'Global shipping reroutes around Strait of Hormuz as insurance premiums spike 300%', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Flightradar24 shows complete aviation blackout over Iran, Iraq, and Persian Gulf', domain: 'flightradar24.com', country: 'Sweden' },
+    { title: 'Amnesty International demands independent investigation into civilian casualties', domain: 'amnesty.org', country: 'United Kingdom' },
+    { title: 'ISW: Iranian force posture indicates preparation for sustained multi-front conflict', domain: 'understandingwar.org', country: 'United States' },
+    { title: 'CSIS analysis: Strait of Hormuz disruption could trigger global recession', domain: 'csis.org', country: 'United States' },
+  ],
 
-  // State media
-  { title: 'Supreme Leader Khamenei vows "devastating response" to American aggression', domain: 'irna.ir', country: 'Iran' },
-  { title: 'IRGC claims successful strikes on US military installations across region', domain: 'presstv.ir', country: 'Iran' },
-  { title: 'Iran civil defense reports 47 martyrs in overnight bombardment of military sites', domain: 'tasnimnews.com', country: 'Iran' },
-  { title: 'Iranian foreign ministry summons Swiss ambassador over US strikes', domain: 'irna.ir', country: 'Iran' },
-  { title: 'Natanz nuclear facility operating normally despite nearby strikes, says AEOI', domain: 'farsnews.ir', country: 'Iran' },
-  { title: 'Iranian parliament holds emergency session, authorizes full military response', domain: 'presstv.ir', country: 'Iran' },
+  ukraine: [
+    { title: 'Russia launches massive overnight drone wave — 420 Shaheds and 39 missiles target Ukraine energy grid', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Ukrainian air defenses intercept majority of incoming drones over Kyiv region', domain: 'apnews.com', country: 'United States' },
+    { title: 'Russian forces advance near Pokrovsk in Donetsk — Ukraine reinforces defensive lines', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'Zelensky calls for additional air defense systems after largest attack in months', domain: 'france24.com', country: 'France' },
+    { title: 'Ukraine strikes Russian oil depot in Belgorod region with long-range drones', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'FPV drone warfare now primary weapon on both sides of Donetsk frontline', domain: 'theguardian.com', country: 'United Kingdom' },
+    { title: 'Russia claims control of two more villages in slow advance toward Pokrovsk', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'US-Ukraine-Russia diplomatic talks resume in Geneva with low expectations', domain: 'washingtonpost.com', country: 'United States' },
+    { title: 'Ukraine reports 80% of thermal power generation capacity destroyed by Russian strikes', domain: 'cnn.com', country: 'United States' },
+    { title: 'Starlink access being shut off for Russian military units on frontline', domain: 'nytimes.com', country: 'United States' },
+    { title: 'ISW: Russian casualties estimated at 1.1 million killed and wounded since 2022', domain: 'understandingwar.org', country: 'United States' },
+    { title: 'NATO provides additional Patriot batteries to shore up Ukrainian air defense', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Zaporizhzhia nuclear plant ceasefire agreed for emergency repairs', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'Ukrainian farmers struggle to maintain food exports amid energy grid destruction', domain: 'france24.com', country: 'France' },
+    { title: 'Kharkiv under constant bombardment — civilians sheltering underground for weeks', domain: 'aljazeera.com', country: 'Qatar' },
+  ],
 
-  // Israeli
-  { title: 'IDF activates full northern command as Hezbollah escalation begins', domain: 'timesofisrael.com', country: 'Israel' },
-  { title: 'Israel opens 1,500 additional bomb shelters as Iran threatens direct retaliation', domain: 'haaretz.com', country: 'Israel' },
-  { title: 'Israeli intelligence: Iran moving ballistic missiles to forward positions', domain: 'i24news.tv', country: 'Israel' },
-  { title: 'Netanyahu convenes war cabinet for third consecutive emergency session', domain: 'timesofisrael.com', country: 'Israel' },
-  { title: 'Iron Dome intercepts 94% of incoming projectiles in heaviest barrage since October', domain: 'jpost.com', country: 'Israel' },
-  { title: 'Haaretz editorial: Two-front war demands diplomatic exit strategy', domain: 'haaretz.com', country: 'Israel' },
+  gaza: [
+    { title: 'Gaza ceasefire holds but sporadic violations reported near Khan Younis', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'UNRWA: 1.9 million displaced in Gaza — near-total population displacement', domain: 'apnews.com', country: 'United States' },
+    { title: 'WHO reports Gaza health system has completely collapsed — hospitals non-functional', domain: 'who.int', country: 'Switzerland' },
+    { title: 'IDF conducts raids in Jenin and Nablus as West Bank violence escalates', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'ICJ genocide case against Israel moves to merit phase — South Africa presents evidence', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'Aid organizations report severe restrictions on humanitarian access to northern Gaza', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: '576 Palestinians killed since October ceasefire — rights groups demand enforcement', domain: 'middleeasteye.net', country: 'United Kingdom' },
+    { title: 'Settlement expansion in West Bank accelerates under new Israeli government policy', domain: 'haaretz.com', country: 'Israel' },
+    { title: 'Palestinian Authority calls for international protection force in West Bank', domain: 'france24.com', country: 'France' },
+    { title: 'UNICEF: Generation of Gaza children face severe psychological trauma', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Reconstruction of Gaza estimated at $50-80 billion over two decades', domain: 'worldbank.org', country: 'United States' },
+    { title: 'Amnesty: Systematic destruction of civilian infrastructure constitutes war crime', domain: 'amnesty.org', country: 'United Kingdom' },
+  ],
 
-  // OSINT
-  { title: 'Liveuamap: Confirmed strikes on 14 military installations across Iran', domain: 'liveuamap.com', country: 'Ukraine' },
-  { title: 'NetBlocks: Internet connectivity in Iran drops to 4% of normal levels', domain: 'netblocks.org', country: 'United Kingdom' },
-  { title: 'Flightradar24 shows complete aviation blackout over Iran, Iraq, and Persian Gulf', domain: 'flightradar24.com', country: 'Sweden' },
-  { title: 'NASA FIRMS detects major thermal anomalies near Isfahan industrial complex', domain: 'firms.modaps.eosdis.nasa.gov', country: 'United States' },
-  { title: 'MarineTraffic: 40+ tankers holding position outside Strait of Hormuz', domain: 'marinetraffic.com', country: 'Greece' },
-  { title: 'Sentinel-2 imagery reveals cratering at Parchin military complex', domain: 'bellingcat.com', country: 'Netherlands' },
+  sudan: [
+    { title: 'RSF forces tighten siege on El Fasher as humanitarian situation deteriorates', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'UN declares famine spreading across Darfur as aid access remains blocked', domain: 'apnews.com', country: 'United States' },
+    { title: 'SAF and RSF continue urban warfare in Khartoum — capital largely destroyed', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'USAID cancels 83% of Sudan programs amid funding cuts — millions at risk', domain: 'washingtonpost.com', country: 'United States' },
+    { title: 'Wagner Group mercenaries reportedly supporting RSF operations in Darfur', domain: 'france24.com', country: 'France' },
+    { title: '11.8 million Sudanese displaced — largest displacement crisis in the world', domain: 'unhcr.org', country: 'Switzerland' },
+    { title: 'Reports of mass atrocities by RSF in West Darfur echo 2003 genocide', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'Port Sudan serves as SAF de facto capital as Khartoum remains contested', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Egypt increases military aid to SAF as regional proxy war deepens', domain: 'middleeasteye.net', country: 'United Kingdom' },
+    { title: 'MSF: Medical facilities in Darfur overwhelmed — supplies nearly exhausted', domain: 'msf.org', country: 'Switzerland' },
+  ],
 
-  // Independent
-  { title: 'Middle East Eye: Civilian infrastructure damage far exceeds Pentagon claims', domain: 'middleeasteye.net', country: 'United Kingdom' },
-  { title: 'Intercept obtains leaked military assessment showing broader target list than disclosed', domain: 'theintercept.com', country: 'United States' },
-  { title: 'Crisis Group warns of uncontrollable escalation spiral across Middle East', domain: 'crisisgroup.org', country: 'Belgium' },
-  { title: 'Amnesty International demands independent investigation into civilian casualties', domain: 'amnesty.org', country: 'United Kingdom' },
+  myanmar: [
+    { title: 'Resistance forces capture key positions in Shan State as junta weakens', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Myanmar junta plans sham elections — opposition and ethnic groups boycott', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'Arakan Army controls most of Rakhine State — junta authority collapses', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'PDF guerrilla operations intensify in Sagaing — junta control limited to cities', domain: 'france24.com', country: 'France' },
+    { title: 'China watches Myanmar civil war closely as border instability grows', domain: 'scmp.com', country: 'Hong Kong' },
+    { title: '3 million internally displaced across Myanmar as civil war enters fifth year', domain: 'unhcr.org', country: 'Switzerland' },
+    { title: 'KIA forces continue operations in Kachin — junta air strikes on civilian areas', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Both sides accused of using child soldiers in Myanmar civil war', domain: 'hrw.org', country: 'United States' },
+    { title: 'Tatmadaw losing control of multiple fronts simultaneously — analysts predict collapse', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'ASEAN fails to make progress on Myanmar crisis — diplomatic paralysis continues', domain: 'apnews.com', country: 'United States' },
+  ],
 
-  // Opposition
-  { title: 'Iran International: Anti-regime protests erupt in 12 Iranian cities amid chaos', domain: 'iranintl.com', country: 'United Kingdom' },
-  { title: 'IranWire: IRGC forces cracking down on dissent as military focuses on external threats', domain: 'iranwire.com', country: 'United Kingdom' },
-  { title: 'Iranian diaspora groups call for regime change as military conflict intensifies', domain: 'iranintl.com', country: 'United Kingdom' },
+  yemen: [
+    { title: 'STC protesters storm government buildings in Aden — southern Yemen crisis deepens', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'Houthi Red Sea attacks paused since Gaza ceasefire but capability remains', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Millions face severe food insecurity across Yemen as aid funding dries up', domain: 'wfp.org', country: 'Italy' },
+    { title: 'Saudi Arabia and UAE back opposing factions in Yemen south — proxy war expands', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'Iran reportedly increasing arms deliveries to Houthi forces via sea routes', domain: 'washingtonpost.com', country: 'United States' },
+    { title: 'Yemen government authority shrinks as STC separatist movement gains ground', domain: 'middleeasteye.net', country: 'United Kingdom' },
+    { title: 'Commercial shipping gradually resuming through Red Sea with elevated risk', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'UN envoy warns Yemen fragmentation could create multiple failed states', domain: 'france24.com', country: 'France' },
+  ],
 
-  // Analysis / Think tanks
-  { title: 'ISW: Iranian force posture indicates preparation for sustained multi-front conflict', domain: 'understandingwar.org', country: 'United States' },
-  { title: 'CSIS analysis: Strait of Hormuz disruption could trigger global recession', domain: 'csis.org', country: 'United States' },
-  { title: 'Brookings: Diplomatic off-ramps narrowing as both sides escalate rhetoric', domain: 'brookings.edu', country: 'United States' },
-  { title: 'CFR: What the Iran strikes mean for US force posture in the Middle East', domain: 'cfr.org', country: 'United States' },
-];
+  syria: [
+    { title: 'Syrian government forces enter Qamishli as SDF integration talks advance', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'ISIS cells conduct attacks in eastern desert — security vacuum persists', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'Israel expands buffer zone in Golan Heights — daily strikes into Syria continue', domain: 'haaretz.com', country: 'Israel' },
+    { title: 'Turkey watches SDF-PKK integration closely — threatens intervention if needed', domain: 'trtworld.com', country: 'Turkey' },
+    { title: 'Al-Sharaa government struggles to consolidate authority across fragmented Syria', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'Reconstruction needs estimated at $400 billion after 15 years of civil war', domain: 'worldbank.org', country: 'United States' },
+    { title: 'Kurdish forces negotiate integration into national military structure', domain: 'france24.com', country: 'France' },
+    { title: 'Refugee return program stalls as security conditions remain uncertain', domain: 'unhcr.org', country: 'Switzerland' },
+  ],
+
+  sahel: [
+    { title: 'JNIM jihadists tighten blockade on Bamako — Mali capital increasingly isolated', domain: 'france24.com', country: 'France' },
+    { title: 'Burkina Faso junta loses control of countryside as jihadist attacks intensify', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Wagner/Africa Corps mercenaries deployed across Mali — atrocities reported', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'Djibo under extended siege — civilians face starvation in Burkina Faso', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'ISGS and JNIM expand territorial control across Sahel — millions displaced', domain: 'apnews.com', country: 'United States' },
+    { title: 'Post-French withdrawal security vacuum accelerates jihadist expansion', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Niger junta consolidates power as regional alliance with Mali and Burkina deepens', domain: 'france24.com', country: 'France' },
+    { title: 'UNHCR: Refugee flows from Sahel region overwhelm neighboring coastal states', domain: 'unhcr.org', country: 'Switzerland' },
+  ],
+
+  drc: [
+    { title: 'M23 forces advance on Goma — Rwanda-backed offensive threatens provincial capital', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Rwanda denies military support to M23 despite overwhelming evidence from UN panel', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: '7 million displaced in eastern DRC — worst humanitarian crisis in Africa', domain: 'unhcr.org', country: 'Switzerland' },
+    { title: 'ADF/ISIS-linked forces conduct mass attack on civilians near Beni', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'MONUSCO peacekeepers begin withdrawal as M23 offensive intensifies', domain: 'france24.com', country: 'France' },
+    { title: 'DRC government accuses Rwanda of invasion — regional diplomatic crisis deepens', domain: 'apnews.com', country: 'United States' },
+    { title: 'Coltan and cobalt mining disrupted by conflict — global supply chain impact', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'South Kivu instability spreads as multiple armed groups exploit power vacuum', domain: 'bbc.com', country: 'United Kingdom' },
+  ],
+
+  haiti: [
+    { title: 'Gangs control 80% of Port-au-Prince — government authority virtually nonexistent', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'UN-backed Kenyan security force deployed but outgunned by armed gangs', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: '700,000 displaced as gang violence spreads beyond capital into Artibonite', domain: 'unhcr.org', country: 'Switzerland' },
+    { title: 'Transitional council fails to establish governance — state collapse deepens', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'Humanitarian corridors repeatedly blocked by gang checkpoints', domain: 'france24.com', country: 'France' },
+    { title: 'Children recruited by armed gangs at alarming rate — UNICEF warns', domain: 'unicef.org', country: 'United States' },
+    { title: 'Haiti police force undermanned and outmatched by well-armed gang coalitions', domain: 'apnews.com', country: 'United States' },
+    { title: 'Dominican Republic reinforces border as Haitian refugees surge', domain: 'reuters.com', country: 'United Kingdom' },
+  ],
+
+  venezuela: [
+    { title: 'US military strikes on Venezuelan fishing boats kill over 100 — international outcry', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Maduro regime consolidates power despite international pressure campaign', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: '7.7 million Venezuelans have fled since 2014 — largest refugee crisis in Americas', domain: 'unhcr.org', country: 'Switzerland' },
+    { title: 'Opposition leader Machado calls for international intervention from exile', domain: 'washingtonpost.com', country: 'United States' },
+    { title: 'US Navy increases Caribbean presence around Venezuela — tensions escalate', domain: 'cnn.com', country: 'United States' },
+    { title: 'Colombia and Brazil express concern over US military approach to Venezuela', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: 'Venezuelan oil production at historic low as sanctions bite deeper', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Latin American leaders condemn US strikes — diplomatic isolation grows', domain: 'france24.com', country: 'France' },
+  ],
+
+  ethiopia: [
+    { title: 'Fano militia expands control across Amhara region — government forces stretched thin', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Tigray ceasefire holds but humanitarian crisis remains severe — recovery stalled', domain: 'bbc.com', country: 'United Kingdom' },
+    { title: 'OLA insurgency in Oromia continues low-level guerrilla campaign', domain: 'aljazeera.com', country: 'Qatar' },
+    { title: '4.6 million internally displaced across Ethiopia — aid organizations overwhelmed', domain: 'unhcr.org', country: 'Switzerland' },
+    { title: 'Ethiopian government declares state of emergency in parts of Amhara region', domain: 'france24.com', country: 'France' },
+    { title: 'Gondar sees heavy fighting as Fano militia clashes with federal forces', domain: 'apnews.com', country: 'United States' },
+    { title: 'International community urges Addis Ababa to negotiate with Fano leadership', domain: 'reuters.com', country: 'United Kingdom' },
+    { title: 'Eritrea border tensions add complexity to Ethiopian security challenges', domain: 'bbc.com', country: 'United Kingdom' },
+  ],
+};
+
+// ─── QUERY → CONFLICT MATCHING ───────────────────────────────────────────────────
+
+const queryKeywords: Record<string, string[]> = {
+  iran: ['iran', 'tehran', 'epic fury', 'irgc', 'hormuz', 'persian gulf'],
+  ukraine: ['ukraine', 'kyiv', 'donbas', 'zaporizhzhia', 'russia ukraine', 'kharkiv'],
+  gaza: ['gaza', 'palestine', 'hamas', 'west bank', 'rafah', 'ceasefire gaza'],
+  sudan: ['sudan', 'khartoum', 'rsf', 'darfur'],
+  myanmar: ['myanmar', 'burma', 'shan state', 'rakhine', 'tatmadaw'],
+  yemen: ['yemen', 'houthi', 'aden', 'red sea shipping'],
+  syria: ['syria', 'damascus', 'sdf', 'hts', 'idlib'],
+  sahel: ['sahel', 'mali', 'burkina faso', 'bamako', 'jnim'],
+  drc: ['congo', 'drc', 'goma', 'north kivu', 'm23'],
+  haiti: ['haiti', 'port au prince'],
+  venezuela: ['venezuela', 'maduro', 'caracas'],
+  ethiopia: ['ethiopia', 'amhara', 'fano', 'addis ababa', 'tigray'],
+};
+
+function detectConflictFromQuery(query: string): string {
+  const q = query.toLowerCase();
+  let bestMatch = 'iran';
+  let bestScore = 0;
+  for (const [conflict, keywords] of Object.entries(queryKeywords)) {
+    const score = keywords.filter(kw => q.includes(kw)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = conflict;
+    }
+  }
+  return bestMatch;
+}
+
+// ─── CONFLICT INTENSITY PROFILES (affects timeline/tone fallback shape) ────────
+
+const conflictIntensity: Record<string, { volume: number; negativity: number }> = {
+  iran: { volume: 1.0, negativity: 1.0 },
+  ukraine: { volume: 0.85, negativity: 0.9 },
+  gaza: { volume: 0.75, negativity: 0.95 },
+  sudan: { volume: 0.4, negativity: 0.85 },
+  myanmar: { volume: 0.35, negativity: 0.6 },
+  yemen: { volume: 0.45, negativity: 0.7 },
+  syria: { volume: 0.4, negativity: 0.55 },
+  sahel: { volume: 0.3, negativity: 0.75 },
+  drc: { volume: 0.35, negativity: 0.8 },
+  haiti: { volume: 0.25, negativity: 0.65 },
+  venezuela: { volume: 0.3, negativity: 0.5 },
+  ethiopia: { volume: 0.25, negativity: 0.6 },
+};
+
+// ─── GENERATORS ──────────────────────────────────────────────────────────────────
 
 // Simple seeded shuffle so fallback data rotates over time (changes every 10 min)
 function shuffleWithSeed<T>(arr: T[], seed: number): T[] {
@@ -108,45 +249,53 @@ function shuffleWithSeed<T>(arr: T[], seed: number): T[] {
   return result;
 }
 
-export function generateFallbackArticles(): FallbackArticle[] {
-  // Rotate article order every 10 minutes so fallback data looks fresh
-  const seed = Math.floor(Date.now() / 600_000);
+export function generateFallbackArticles(query = 'iran'): FallbackArticle[] {
+  const conflict = detectConflictFromQuery(query);
+  const headlines = conflictHeadlines[conflict] || conflictHeadlines.iran;
+  const seed = Math.floor(Date.now() / 600_000) + conflict.charCodeAt(0);
   const shuffled = shuffleWithSeed(headlines, seed);
   return shuffled.map((h, i) => ({
     title: h.title,
     url: `https://${h.domain}`,
     domain: h.domain,
-    seendate: gdeltDate(i * 0.4), // spread articles 24 min apart
+    seendate: gdeltDate(i * 0.4),
     socialimage: h.image || '',
     language: 'English',
     sourcecountry: h.country,
   }));
 }
 
-export function generateFallbackTimeline(): { date: string; value: number }[] {
+export function generateFallbackTimeline(query = 'iran'): { date: string; value: number }[] {
+  const conflict = detectConflictFromQuery(query);
+  const intensity = conflictIntensity[conflict] || conflictIntensity.iran;
   const data: { date: string; value: number }[] = [];
+  // Use conflict name as seed for deterministic but per-conflict noise
+  let noiseSeed = conflict.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   for (let h = 47; h >= 0; h--) {
-    // Simulate realistic article volume: higher during day, spikes during events
     const hour = new Date(Date.now() - h * 3600000).getUTCHours();
-    const base = hour >= 6 && hour <= 22 ? 35 : 12;
-    const spike = h < 6 ? 25 : h < 12 ? 15 : 0; // recent hours have more activity
-    const noise = Math.floor(Math.random() * 15);
+    const base = (hour >= 6 && hour <= 22 ? 35 : 12) * intensity.volume;
+    const spike = (h < 6 ? 25 : h < 12 ? 15 : 0) * intensity.volume;
+    noiseSeed = (noiseSeed * 16807) % 2147483647;
+    const noise = (noiseSeed % 15) * intensity.volume;
     data.push({
       date: gdeltDate(h),
-      value: base + spike + noise,
+      value: Math.round(base + spike + noise),
     });
   }
   return data;
 }
 
-export function generateFallbackTone(): { date: string; value: number }[] {
+export function generateFallbackTone(query = 'iran'): { date: string; value: number }[] {
+  const conflict = detectConflictFromQuery(query);
+  const intensity = conflictIntensity[conflict] || conflictIntensity.iran;
   const data: { date: string; value: number }[] = [];
+  let noiseSeed = conflict.split('').reduce((a, c) => a + c.charCodeAt(0), 0) + 99;
   for (let h = 47; h >= 0; h--) {
-    // Conflict news tends to be negative, oscillating between -4 and -1
-    const base = -2.5;
+    const base = -2.5 * intensity.negativity;
     const variation = Math.sin(h / 6) * 1.2;
-    const noise = (Math.random() - 0.5) * 1.5;
-    const spike = h < 8 ? -1 : 0; // more negative tone recently
+    noiseSeed = (noiseSeed * 16807) % 2147483647;
+    const noise = ((noiseSeed % 150) / 100 - 0.75);
+    const spike = h < 8 ? -1 * intensity.negativity : 0;
     data.push({
       date: gdeltDate(h),
       value: Number((base + variation + noise + spike).toFixed(2)),
@@ -155,7 +304,8 @@ export function generateFallbackTone(): { date: string; value: number }[] {
   return data;
 }
 
-// Geopolitics topic-specific fallback articles
+// ─── GEOPOLITICS TOPIC FALLBACK ──────────────────────────────────────────────────
+
 const topicArticles: Record<string, { title: string; domain: string }[]> = {
   oil: [
     { title: 'Brent crude surges to $96 as Iran conflict threatens key shipping lanes', domain: 'reuters.com' },
@@ -214,7 +364,8 @@ export function generateFallbackTopicArticles(): Record<string, { title: string;
   return result;
 }
 
-// Reddit-style fallback posts
+// ─── REDDIT FALLBACK ────────────────────────────────────────────────────────────
+
 const redditPosts: { title: string; subreddit: string; score: number; comments: number }[] = [
   { title: 'MEGATHREAD: US launches strikes on Iranian military targets — live updates', subreddit: 'worldnews', score: 48920, comments: 12450 },
   { title: 'Iran retaliates with missile strikes on US bases in Iraq and Syria', subreddit: 'worldnews', score: 35100, comments: 8900 },
@@ -244,7 +395,6 @@ const redditPosts: { title: string; subreddit: string; score: number; comments: 
 ];
 
 export function generateFallbackRedditPosts() {
-  // Rotate order every 10 minutes so fallback looks varied
   const seed = Math.floor(Date.now() / 600_000) + 42;
   const shuffled = shuffleWithSeed(redditPosts, seed);
   return shuffled.map((p, i) => ({
@@ -254,7 +404,7 @@ export function generateFallbackRedditPosts() {
     score: p.score + Math.floor(((seed * (i + 1)) % 500) - 250),
     numComments: p.comments + Math.floor(((seed * (i + 2)) % 100) - 50),
     permalink: `https://www.reddit.com/r/${p.subreddit}/comments/fallback${i}`,
-    createdUtc: Math.floor(Date.now() / 1000) - i * 1800, // 30 min apart
+    createdUtc: Math.floor(Date.now() / 1000) - i * 1800,
     url: `https://www.reddit.com/r/${p.subreddit}/comments/fallback${i}`,
   }));
 }
