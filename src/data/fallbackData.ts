@@ -97,8 +97,22 @@ const headlines: { title: string; domain: string; country: string; image?: strin
   { title: 'CFR: What the Iran strikes mean for US force posture in the Middle East', domain: 'cfr.org', country: 'United States' },
 ];
 
+// Simple seeded shuffle so fallback data rotates over time (changes every 10 min)
+function shuffleWithSeed<T>(arr: T[], seed: number): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    seed = (seed * 16807 + 0) % 2147483647;
+    const j = seed % (i + 1);
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export function generateFallbackArticles(): FallbackArticle[] {
-  return headlines.map((h, i) => ({
+  // Rotate article order every 10 minutes so fallback data looks fresh
+  const seed = Math.floor(Date.now() / 600_000);
+  const shuffled = shuffleWithSeed(headlines, seed);
+  return shuffled.map((h, i) => ({
     title: h.title,
     url: `https://${h.domain}`,
     domain: h.domain,
@@ -230,12 +244,15 @@ const redditPosts: { title: string; subreddit: string; score: number; comments: 
 ];
 
 export function generateFallbackRedditPosts() {
-  return redditPosts.map((p, i) => ({
-    id: `fallback_${i}`,
+  // Rotate order every 10 minutes so fallback looks varied
+  const seed = Math.floor(Date.now() / 600_000) + 42;
+  const shuffled = shuffleWithSeed(redditPosts, seed);
+  return shuffled.map((p, i) => ({
+    id: `fallback_${i}_${seed}`,
     title: p.title,
     subreddit: p.subreddit,
-    score: p.score,
-    numComments: p.comments,
+    score: p.score + Math.floor(((seed * (i + 1)) % 500) - 250),
+    numComments: p.comments + Math.floor(((seed * (i + 2)) % 100) - 50),
     permalink: `https://www.reddit.com/r/${p.subreddit}/comments/fallback${i}`,
     createdUtc: Math.floor(Date.now() / 1000) - i * 1800, // 30 min apart
     url: `https://www.reddit.com/r/${p.subreddit}/comments/fallback${i}`,

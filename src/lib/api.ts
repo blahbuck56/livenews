@@ -55,10 +55,13 @@ export async function fetchGdeltArticles(
     );
     if (res.ok) {
       const data = await safeJson(res);
-      if (data?.articles?.length > 0) return data;
+      if (data?.articles?.length > 0) {
+        console.log(`[GDELT] Proxy returned ${data.articles.length} articles`);
+        return data;
+      }
     }
-  } catch {
-    // Proxy not available (local dev or non-Vercel host)
+  } catch (err) {
+    console.warn('[GDELT] Proxy unavailable:', (err as Error).message);
   }
 
   // 2. Try direct GDELT API (works if CORS is supported)
@@ -69,13 +72,17 @@ export async function fetchGdeltArticles(
     );
     if (res.ok) {
       const data = await safeJson(res);
-      if (data?.articles?.length > 0) return data;
+      if (data?.articles?.length > 0) {
+        console.log(`[GDELT] Direct API returned ${data.articles.length} articles`);
+        return data;
+      }
     }
-  } catch {
-    // CORS blocked or network error
+  } catch (err) {
+    console.warn('[GDELT] Direct API failed:', (err as Error).message);
   }
 
   // 3. Fallback: comprehensive intelligence data
+  console.warn('[GDELT] Using fallback data for query:', query);
   return { articles: generateFallbackArticles() };
 }
 
@@ -96,7 +103,9 @@ export async function fetchGdeltTimeline(query = 'iran'): Promise<ApiData> {
       const data = await safeJson(res);
       if (data?.timeline?.[0]?.data?.length > 0) return data;
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[GDELT Timeline] Proxy failed:', (err as Error).message);
+  }
 
   // 2. Try direct GDELT
   try {
@@ -108,9 +117,12 @@ export async function fetchGdeltTimeline(query = 'iran'): Promise<ApiData> {
       const data = await safeJson(res);
       if (data?.timeline?.[0]?.data?.length > 0) return data;
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[GDELT Timeline] Direct failed:', (err as Error).message);
+  }
 
   // 3. Fallback
+  console.warn('[GDELT Timeline] Using fallback data');
   return { timeline: [{ data: generateFallbackTimeline() }] };
 }
 
@@ -132,7 +144,9 @@ export async function fetchGdeltTone(query = 'iran'): Promise<ApiData> {
       const data = await safeJson(res);
       if (data?.timeline?.[0]?.data?.length > 0) return data;
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[GDELT Tone] Proxy failed:', (err as Error).message);
+  }
 
   // 2. Try direct GDELT (FIXED: timelinetone instead of tonechart)
   try {
@@ -144,9 +158,12 @@ export async function fetchGdeltTone(query = 'iran'): Promise<ApiData> {
       const data = await safeJson(res);
       if (data?.timeline?.[0]?.data?.length > 0) return data;
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[GDELT Tone] Direct failed:', (err as Error).message);
+  }
 
   // 3. Fallback
+  console.warn('[GDELT Tone] Using fallback data');
   return { timeline: [{ data: generateFallbackTone() }] };
 }
 
@@ -167,7 +184,9 @@ export async function fetchGdeltTopicArticles(query: string): Promise<ApiData> {
       const data = await safeJson(res);
       if (data?.articles?.length > 0) return data;
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[GDELT Topics] Proxy failed:', (err as Error).message);
+  }
 
   // 2. Try direct GDELT
   try {
@@ -179,7 +198,9 @@ export async function fetchGdeltTopicArticles(query: string): Promise<ApiData> {
       const data = await safeJson(res);
       if (data?.articles?.length > 0) return data;
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[GDELT Topics] Direct failed:', (err as Error).message);
+  }
 
   // 3. No individual topic fallback — handled at the hook level
   return { articles: [] };
@@ -202,9 +223,14 @@ export async function fetchRedditPosts(
     const res = await fetchWithTimeout(`/api/reddit?${params}`, 8000);
     if (res.ok) {
       const data = await safeJson(res);
-      if (data?.data) return data;
+      if (data?.data) {
+        console.log(`[Reddit] Proxy returned data for r/${subreddit}`);
+        return data;
+      }
     }
-  } catch {}
+  } catch (err) {
+    console.warn(`[Reddit] Proxy failed for r/${subreddit}:`, (err as Error).message);
+  }
 
   // 2. Try direct Reddit (will fail in browsers due to CORS, but works in some environments)
   try {
@@ -216,9 +242,12 @@ export async function fetchRedditPosts(
       const data = await safeJson(res);
       if (data?.data) return data;
     }
-  } catch {}
+  } catch (err) {
+    console.warn(`[Reddit] Direct failed for r/${subreddit}:`, (err as Error).message);
+  }
 
   // 3. Return empty — fallback handled at hook level
+  console.warn(`[Reddit] Using fallback for r/${subreddit}`);
   return {};
 }
 
