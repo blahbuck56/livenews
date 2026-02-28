@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navLinks = [
-  { to: '/', label: 'Live Feed' },
+  { to: '/', label: 'Command Center' },
+  { to: '/feed', label: 'Live Feed' },
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/social', label: 'Social Pulse' },
   { to: '/video', label: 'Live Video' },
@@ -59,12 +60,12 @@ export default function Navbar() {
             </span>
             <Link to="/" className="no-underline hidden sm:block">
               <span style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.5px', color: '#111827' }}>
-                IRAN <span style={{ color: '#DC2626' }}>CONFLICT</span> MONITOR
+                <span style={{ color: '#DC2626' }}>CONFLICT</span> MONITOR
               </span>
             </Link>
             <Link to="/" className="no-underline sm:hidden">
               <span style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '-0.3px', color: '#111827' }}>
-                I<span style={{ color: '#DC2626' }}>C</span>M
+                <span style={{ color: '#DC2626' }}>C</span>M
               </span>
             </Link>
           </div>

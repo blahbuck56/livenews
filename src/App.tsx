@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
 import BottomTicker from './components/layout/BottomTicker'
 import Footer from './components/layout/Footer'
+import CommandCenter from './pages/CommandCenter'
 import LiveFeed from './pages/LiveFeed'
 import Dashboard from './pages/Dashboard'
 import SocialPulse from './pages/SocialPulse'
@@ -15,7 +16,8 @@ export default function App() {
     <div className="min-h-screen bg-[#F8F9FA] pb-12">
       <Navbar />
       <Routes>
-        <Route path="/" element={<LiveFeed />} />
+        <Route path="/" element={<CommandCenter />} />
+        <Route path="/feed" element={<LiveFeed />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/social" element={<SocialPulse />} />
         <Route path="/video" element={<LiveVideo />} />
