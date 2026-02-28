@@ -91,7 +91,7 @@ body {
 }
 
 .animate-progress {
-  animation: progress-sweep 60s linear infinite;
+  animation: progress-sweep 15s linear infinite;
 }
 
 .animate-shimmer {

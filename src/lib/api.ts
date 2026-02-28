@@ -83,11 +83,13 @@ export async function fetchGdeltArticles(
 // GDELT Timeline (Article Volume)
 // ============================================================
 
-export async function fetchGdeltTimeline(): Promise<ApiData> {
+export async function fetchGdeltTimeline(query = 'iran'): Promise<ApiData> {
+  const eq = encodeURIComponent(query);
+
   // 1. Try Vercel proxy
   try {
     const res = await fetchWithTimeout(
-      '/api/gdelt?query=iran&mode=timelinevol&timeres=60&timespan=72h',
+      `/api/gdelt?query=${eq}&mode=timelinevol&timeres=60&timespan=72h`,
       6000
     );
     if (res.ok) {
@@ -99,7 +101,7 @@ export async function fetchGdeltTimeline(): Promise<ApiData> {
   // 2. Try direct GDELT
   try {
     const res = await fetchWithTimeout(
-      `${GDELT_BASE}?query=iran&mode=timelinevol&TIMERES=60&TIMESPAN=72h&format=json`,
+      `${GDELT_BASE}?query=${eq}&mode=timelinevol&TIMERES=60&TIMESPAN=72h&format=json`,
       10000
     );
     if (res.ok) {
@@ -117,11 +119,13 @@ export async function fetchGdeltTimeline(): Promise<ApiData> {
 // FIXED: was using mode=tonechart (histogram), now uses mode=timelinetone (timeline)
 // ============================================================
 
-export async function fetchGdeltTone(): Promise<ApiData> {
+export async function fetchGdeltTone(query = 'iran'): Promise<ApiData> {
+  const eq = encodeURIComponent(query);
+
   // 1. Try Vercel proxy
   try {
     const res = await fetchWithTimeout(
-      '/api/gdelt?query=iran&mode=timelinetone&timespan=72h',
+      `/api/gdelt?query=${eq}&mode=timelinetone&timespan=72h`,
       6000
     );
     if (res.ok) {
@@ -133,7 +137,7 @@ export async function fetchGdeltTone(): Promise<ApiData> {
   // 2. Try direct GDELT (FIXED: timelinetone instead of tonechart)
   try {
     const res = await fetchWithTimeout(
-      `${GDELT_BASE}?query=iran&mode=timelinetone&TIMESPAN=72h&format=json`,
+      `${GDELT_BASE}?query=${eq}&mode=timelinetone&TIMESPAN=72h&format=json`,
       10000
     );
     if (res.ok) {
