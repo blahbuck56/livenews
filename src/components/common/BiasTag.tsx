@@ -12,18 +12,7 @@ const biasConfig: Record<string, { bg: string; text: string }> = {
 export default function BiasTag({ bias }: { bias: string }) {
   const config = biasConfig[bias] || biasConfig.neutral;
   return (
-    <span
-      className={`inline-block ${config.bg} ${config.text}`}
-      style={{
-        padding: '2px 6px',
-        borderRadius: '3px',
-        fontSize: '9px',
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px',
-        lineHeight: '1.4',
-      }}
-    >
+    <span className={`inline-block ${config.bg} ${config.text} px-1.5 py-px rounded-[3px] text-[9px] font-bold uppercase tracking-[0.5px] leading-[1.4]`}>
       {bias}
     </span>
   );

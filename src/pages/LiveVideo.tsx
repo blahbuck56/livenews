@@ -271,7 +271,7 @@ export default function LiveVideo() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
         <div className="flex items-center gap-3">
-          <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', margin: 0 }}>
+          <h1 className="text-[16px] sm:text-[18px] font-extrabold text-[#111827] tracking-[-0.5px] m-0">
             Live Video
           </h1>
           <span className="flex items-center gap-1 px-1.5 py-0.5 bg-[#DC2626] rounded-[2px]">

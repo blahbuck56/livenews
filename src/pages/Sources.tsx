@@ -40,7 +40,7 @@ export default function Sources() {
 
   return (
     <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
-      <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Source Directory</h1>
+      <h1 className="text-[16px] sm:text-[18px] font-extrabold text-[#111827] tracking-[-0.5px] mb-4">Source Directory</h1>
 
       {/* Filters */}
       <div className="card p-3 sm:p-4 mb-4">
@@ -81,8 +81,8 @@ export default function Sources() {
                 <BiasTag bias={s.bias} />
               </div>
               <div className="flex flex-wrap gap-1.5 mb-2">
-                <span className="bg-gray-100 text-gray-600" style={{ padding: '1px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase' }}>{s.category}</span>
-                <span className="bg-gray-100 text-gray-600" style={{ padding: '1px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase' }}>{s.type}</span>
+                <span className="bg-gray-100 text-gray-600 px-1.5 py-px rounded-[3px] text-[9px] font-semibold uppercase">{s.category}</span>
+                <span className="bg-gray-100 text-gray-600 px-1.5 py-px rounded-[3px] text-[9px] font-semibold uppercase">{s.type}</span>
                 <span className="flex items-center gap-1"><StatusDot status={s.status} /><span className="text-[10px] text-[#6B7280]">{s.status}</span></span>
               </div>
               <p className="text-[11px] text-[#6B7280] leading-snug mb-2">{s.description}</p>

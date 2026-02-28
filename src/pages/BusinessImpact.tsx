@@ -190,7 +190,7 @@ export default function BusinessImpact() {
   return (
     <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-        <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', margin: 0 }}>
+        <h1 className="text-[16px] sm:text-[18px] font-extrabold text-[#111827] tracking-[-0.5px] m-0">
           Business Impact & Cross-Border Trade
         </h1>
         <div className="flex items-center gap-2">
@@ -223,26 +223,26 @@ export default function BusinessImpact() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-4">
             <div className="card p-3 sm:p-4">
               <SectionHeader>Brent Crude</SectionHeader>
-              <div className="text-[24px] sm:text-[28px] font-bold font-mono leading-none text-[#D97706]">
+              <div className="text-[22px] sm:text-[28px] font-bold font-mono leading-none text-[#D97706]">
                 ${brentData[brentData.length - 1].price}
               </div>
               <div className="text-[11px] text-[#DC2626] mt-1">+$8.40 (+9.6%) since conflict</div>
             </div>
             <div className="card p-3 sm:p-4">
               <SectionHeader>Avg Trade Impact</SectionHeader>
-              <div className="text-[24px] sm:text-[28px] font-bold font-mono leading-none text-[#DC2626]">{avgTradeImpact}%</div>
+              <div className="text-[22px] sm:text-[28px] font-bold font-mono leading-none text-[#DC2626]">{avgTradeImpact}%</div>
               <div className="text-[11px] text-[#6B7280] mt-1">across 8 major sectors</div>
             </div>
             <div className="card p-3 sm:p-4">
               <SectionHeader>Freight Rate Index</SectionHeader>
-              <div className="text-[24px] sm:text-[28px] font-bold font-mono leading-none text-[#D97706]">
+              <div className="text-[22px] sm:text-[28px] font-bold font-mono leading-none text-[#D97706]">
                 ${shippingData[shippingData.length - 1].price.toLocaleString()}
               </div>
               <div className="text-[11px] text-[#DC2626] mt-1">+180% from pre-conflict</div>
             </div>
             <div className="card p-3 sm:p-4">
               <SectionHeader>Chokepoints at Risk</SectionHeader>
-              <div className="text-[24px] sm:text-[28px] font-bold font-mono leading-none text-[#DC2626]">
+              <div className="text-[22px] sm:text-[28px] font-bold font-mono leading-none text-[#DC2626]">
                 {chokepoints.filter((c) => c.risk >= 6).length}/{chokepoints.length}
               </div>
               <div className="text-[11px] text-[#6B7280] mt-1">above elevated risk threshold</div>

@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import { useGeopoliticsNews } from '../hooks/useGdeltArticles';
+import { timeAgo } from '../hooks/useConflictData';
 import { timelineEvents } from '../data/timelineEvents';
 import { FeedSkeleton } from '../components/common/LoadingSkeleton';
 import ErrorState from '../components/common/ErrorState';
@@ -29,25 +30,15 @@ const conflictZones = [
   { name: 'Ethiopia', lat: 9.0, lng: 38.7, intensity: 4, color: '#D97706', connection: 'Horn of Africa instability; refugee flows' },
 ];
 
-function timeAgo(dateStr: string): string {
-  const s = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
-
 export default function Geopolitics() {
   const { data, isLoading, isError, refetch } = useGeopoliticsNews();
 
   return (
     <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
-      <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Global Impact</h1>
+      <h1 className="text-[16px] sm:text-[18px] font-extrabold text-[#111827] tracking-[-0.5px] mb-4">Global Impact</h1>
 
       {/* Impact Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
         {isLoading ? Array.from({ length: 6 }).map((_, i) => <FeedSkeleton key={i} count={1} />) :
          isError ? <div className="col-span-full"><ErrorState message="Failed to load geopolitics data" onRetry={refetch} /></div> :
          topicConfig.map((topic) => (
@@ -72,7 +63,7 @@ export default function Geopolitics() {
       </div>
 
       {/* Conflict Timeline */}
-      <div className="card p-4 mb-6">
+      <div className="card p-4 mb-4">
         <SectionHeader>Conflict Timeline</SectionHeader>
         <div className="relative mt-4">
           <div className="absolute top-3 left-0 right-0 h-[2px] bg-[#E5E7EB]" />

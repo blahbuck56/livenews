@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useCombinedNews } from '../hooks/useGdeltArticles';
+import { timeAgo } from '../hooks/useConflictData';
 import { extractKeywords } from '../lib/keywords';
 import { allSources } from '../data/sources';
 import { FeedSkeleton } from '../components/common/LoadingSkeleton';
@@ -60,15 +61,7 @@ const situationStatus = [
   { label: 'Duration', value: 'Multi-Day', color: '#D97706' },
 ];
 
-function timeAgo(dateStr: string): string {
-  const s = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m} min ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h} hr ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
+
 
 export default function LiveFeed() {
   const { articles, isLoading, isError, refetch } = useCombinedNews();
@@ -185,6 +178,7 @@ export default function LiveFeed() {
 
   return (
     <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
+      <h1 className="text-[16px] sm:text-[18px] font-extrabold text-[#111827] tracking-[-0.5px] mb-4 hidden lg:block">Live Feed</h1>
       <div className="lg:hidden flex gap-2 mb-3">
         <button onClick={() => setMobileDrawer(mobileDrawer === 'left' ? null : 'left')} className={`text-[12px] px-4 py-2 border bg-white text-[#374151] cursor-pointer rounded-[6px] transition-colors active:bg-gray-100 ${mobileDrawer === 'left' ? 'border-[#111827] font-medium' : ''}`}>Filters</button>
         <button onClick={() => setMobileDrawer(mobileDrawer === 'right' ? null : 'right')} className={`text-[12px] px-4 py-2 border bg-white text-[#374151] cursor-pointer rounded-[6px] transition-colors active:bg-gray-100 ${mobileDrawer === 'right' ? 'border-[#111827] font-medium' : ''}`}>Widgets</button>

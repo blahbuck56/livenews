@@ -149,7 +149,7 @@ export function useConflictTone(conflictId: ConflictId) {
 // ─── COMPUTED METRICS ───────────────────────────────────────────────────────────
 
 export interface ComputedMetrics {
-  articleCount: number;
+  escalationIndex: number;
   avgSentiment: number;
   sourceCount: number;
   countriesMentioned: number;
@@ -168,6 +168,25 @@ const COUNTRY_NAMES = [
   'nato', 'eu', 'un', 'opec',
 ];
 
+const ESCALATION_KEYWORDS = /strike|attack|bomb|missile|kill|dead|destroy|explosion|war|invasion|offensive|retaliat|escalat|airstr|casualt|wound/i;
+
+export function computeEscalationIndex(articles: ConflictArticle[]): number {
+  if (articles.length === 0) return 0;
+  // Factor 1: Negative sentiment intensity (0-3 pts)
+  const avgSent = articles.reduce((s, a) => s + a.sentiment, 0) / articles.length;
+  const sentScore = Math.min(3, Math.max(0, (-avgSent) * 3));
+  // Factor 2: Military keyword density (0-3 pts)
+  const militaryCount = articles.filter(a => ESCALATION_KEYWORDS.test(a.title)).length;
+  const militaryRatio = militaryCount / articles.length;
+  const keywordScore = Math.min(3, militaryRatio * 5);
+  // Factor 3: Coverage volume (0-2 pts) — high volume = high intensity
+  const volumeScore = Math.min(2, articles.length / 100);
+  // Factor 4: Source breadth (0-2 pts) — many sources = confirmed event
+  const sources = new Set(articles.map(a => a.source)).size;
+  const breadthScore = Math.min(2, sources / 25);
+  return Math.min(10, Number((sentScore + keywordScore + volumeScore + breadthScore).toFixed(1)));
+}
+
 export function computeMetrics(
   articles: ConflictArticle[],
   theaterCount: number,
@@ -182,7 +201,7 @@ export function computeMetrics(
   const countries = COUNTRY_NAMES.filter(c => allTitlesLower.includes(c));
 
   return {
-    articleCount: articles.length,
+    escalationIndex: computeEscalationIndex(articles),
     avgSentiment: Number(avgSentiment.toFixed(3)),
     sourceCount: sources.size,
     countriesMentioned: countries.length,

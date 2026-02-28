@@ -7,6 +7,7 @@ import {
   useConflictTimeline,
   useConflictTone,
   computeMetrics,
+  computeEscalationIndex,
   extractTrendingKeywords,
   timeAgo,
   type ConflictArticle,
@@ -127,10 +128,11 @@ function Section({ title, dataUpdatedAt, isFetching, children, className = '', l
 
 // ─── SNAPSHOT HERO ──────────────────────────────────────────────────────────────
 
-function SnapshotHero({ config, articleCount, dataUpdatedAt, isFetching }: {
-  config: ConflictConfig; articleCount: number; dataUpdatedAt: number; isFetching: boolean;
+function SnapshotHero({ config, escalationIndex, dataUpdatedAt, isFetching }: {
+  config: ConflictConfig; escalationIndex: number; dataUpdatedAt: number; isFetching: boolean;
 }) {
   const sc = severityColors[config.severity] || severityColors.WATCH;
+  const eiColor = escalationIndex >= 7 ? '#DC2626' : escalationIndex >= 4 ? '#D97706' : '#2563EB';
   return (
     <div className="card p-4 sm:p-5 mb-4 border-l-4" style={{ borderLeftColor: sc.text }}>
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
@@ -145,7 +147,7 @@ function SnapshotHero({ config, articleCount, dataUpdatedAt, isFetching }: {
       </h2>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#6B7280] font-mono mb-3">
         <span>Since {config.startDate}</span>
-        <span>{articleCount} articles tracked</span>
+        <span style={{ color: eiColor, fontWeight: 600 }}>Escalation: {escalationIndex}/10</span>
         {config.casualtyEstimate && <span>Casualties: {config.casualtyEstimate}</span>}
         {config.displacedEstimate && <span>Displaced: {config.displacedEstimate}</span>}
       </div>
@@ -209,8 +211,11 @@ function MetricCards({ articles, config, timelineData, toneData, tlUpdated, tlFe
   const tlSpark = useMemo(() => timelineData.slice(-24).map(d => ({ v: d.count })), [timelineData]);
   const tnSpark = useMemo(() => toneData.slice(-24).map(d => ({ v: d.tone })), [toneData]);
 
+  const eiColor = metrics.escalationIndex >= 7 ? 'danger' : metrics.escalationIndex >= 4 ? 'warning' : 'info';
+  const eiLabel = metrics.escalationIndex >= 7 ? 'Critical' : metrics.escalationIndex >= 4 ? 'Elevated' : 'Moderate';
+
   const cards = [
-    { label: 'Articles (24h)', value: String(metrics.articleCount), delta: `${metrics.sourceCount} sources`, deltaType: 'danger' as const, sparkData: tlSpark },
+    { label: 'Escalation Index', value: `${metrics.escalationIndex}/10`, delta: eiLabel, deltaType: eiColor as 'danger' | 'warning' | 'info', sparkData: tlSpark },
     { label: 'Avg Sentiment', value: metrics.avgSentiment.toFixed(2), delta: metrics.avgSentiment < -0.5 ? 'Strongly negative' : metrics.avgSentiment < 0 ? 'Negative' : 'Neutral', deltaType: (metrics.avgSentiment < -0.5 ? 'danger' : 'warning') as 'danger' | 'warning', sparkData: tnSpark },
     { label: 'Active Theaters', value: String(metrics.theaterCount), delta: `${config.theaters.filter(t => t.status === 'ACTIVE').length} active`, deltaType: 'warning' as const, sparkData: [] as { v: number }[] },
     { label: 'Sources Reporting', value: String(metrics.sourceCount), delta: `Across ${metrics.sourceCount} outlets`, deltaType: 'info' as const, sparkData: [] as { v: number }[] },
@@ -246,7 +251,7 @@ function TheaterTable({ theaters }: { theaters: ConflictConfig['theaters'] }) {
   return (
     <div className="card mb-4 overflow-x-auto">
       <div className="p-4 pb-2"><h3 className="section-header mb-0">Operational Theaters</h3></div>
-      <table className="w-full text-left" style={{ fontSize: '12px', borderCollapse: 'collapse' }}>
+      <table className="w-full text-left text-[12px] border-collapse">
         <thead>
           <tr className="border-b border-[#E5E7EB]">
             <th className="px-4 py-2 font-mono text-[9px] font-semibold uppercase tracking-wider text-[#9CA3AF]">Theater</th>
@@ -507,7 +512,7 @@ export default function CommandCenter() {
       {/* Hero Snapshot */}
       <SnapshotHero
         config={config}
-        articleCount={articles.length}
+        escalationIndex={computeEscalationIndex(articles)}
         dataUpdatedAt={feed.dataUpdatedAt}
         isFetching={feed.isFetching}
       />

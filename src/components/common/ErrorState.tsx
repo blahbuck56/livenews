@@ -6,8 +6,7 @@ export default function ErrorState({ message, onRetry }: { message: string; onRe
       {onRetry && (
         <button
           onClick={onRetry}
-          className="px-3 py-1.5 text-[11px] font-medium text-[#DC2626] border border-red-200 bg-white hover:bg-red-50 cursor-pointer transition-colors"
-          style={{ borderRadius: '4px' }}
+          className="px-3 py-1.5 text-[11px] font-medium text-[#DC2626] border border-red-200 bg-white hover:bg-red-50 cursor-pointer transition-colors rounded-[4px]"
         >
           Retry
         </button>

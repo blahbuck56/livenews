@@ -120,6 +120,21 @@ body {
   border-radius: 6px;
 }
 
+/* Page title utility — consistent h1 across all pages */
+.page-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 640px) {
+  .page-title {
+    font-size: 18px;
+  }
+}
+
 /* Section header utility */
 .section-header {
   font-size: 10px;
@@ -127,6 +142,21 @@ body {
   text-transform: uppercase;
   letter-spacing: 1.5px;
   color: var(--color-text-muted);
+}
+
+/* Metric value — standardized KPI numbers */
+.metric-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+@media (min-width: 640px) {
+  .metric-value {
+    font-size: 28px;
+  }
 }
 
 /* Card base */

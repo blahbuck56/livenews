@@ -86,7 +86,7 @@ export default function SocialPulse() {
 
   return (
     <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
-      <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Social Pulse</h1>
+      <h1 className="text-[16px] sm:text-[18px] font-extrabold text-[#111827] tracking-[-0.5px] mb-4">Social Pulse</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Left: Social Feed */}
@@ -131,10 +131,10 @@ export default function SocialPulse() {
                 return (
                   <a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" className="card block p-3 no-underline hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`${subClass}`} style={{ padding: '1px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>r/{post.subreddit}</span>
+                      <span className={`${subClass} px-1.5 py-px rounded-[3px] text-[9px] font-bold uppercase tracking-[0.5px]`}>r/{post.subreddit}</span>
                       <span className="font-mono text-[11px] text-[#9CA3AF]">{timeAgo(post.createdUtc)}</span>
                     </div>
-                    <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#111827', lineHeight: '1.35', margin: '0 0 6px 0' }}>{post.title}</h4>
+                    <h4 className="text-[14px] font-semibold text-[#111827] leading-snug m-0 mb-1.5">{post.title}</h4>
                     <div className="flex items-center gap-3 text-[11px] text-[#6B7280]">
                       <span>{post.score} pts</span>
                       <span>{post.numComments} comments</span>
