@@ -43,7 +43,7 @@ export default function Geopolitics() {
   const { data, isLoading, isError, refetch } = useGeopoliticsNews();
 
   return (
-    <div className="max-w-[1800px] mx-auto px-4 py-4">
+    <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
       <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Global Impact</h1>
 
       {/* Impact Cards */}
@@ -78,7 +78,7 @@ export default function Geopolitics() {
           <div className="absolute top-3 left-0 right-0 h-[2px] bg-[#E5E7EB]" />
           <div className="flex overflow-x-auto gap-0 pb-4">
             {timelineEvents.map((ev, i) => (
-              <div key={i} className="flex flex-col items-center min-w-[140px] px-1.5 relative group cursor-default">
+              <div key={i} className="flex flex-col items-center min-w-[120px] sm:min-w-[140px] px-1 sm:px-1.5 relative group cursor-default">
                 <div className={`w-3 h-3 rounded-full border-2 z-10 transition-transform group-hover:scale-150 ${
                   ev.title.includes('Epic Fury') || ev.title.includes('retaliates') || ev.title.includes('close airspace')
                     ? 'bg-[#DC2626] border-[#DC2626]'
@@ -98,8 +98,8 @@ export default function Geopolitics() {
       {/* World Conflict Map */}
       <div className="card p-4">
         <SectionHeader>World Conflict Context</SectionHeader>
-        <div className="h-[400px] mt-2">
-          <MapContainer center={[25, 45]} zoom={3} scrollWheelZoom={false} style={{ height: '100%', width: '100%', borderRadius: '6px' }}>
+        <div className="h-[280px] sm:h-[400px] mt-2">
+          <MapContainer center={[25, 45]} zoom={2} scrollWheelZoom={false} dragging={true} style={{ height: '100%', width: '100%', borderRadius: '6px' }}>
             <TileLayer attribution='&copy; CARTO' url={CARTO_TILES} />
             {conflictZones.map((zone) => (
               <CircleMarker

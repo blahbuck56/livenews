@@ -33,6 +33,11 @@ export default function Navbar() {
     return () => clearInterval(interval);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   return (
     <>
       {/* Progress bar — fixed top, z-9999 */}
@@ -41,18 +46,18 @@ export default function Navbar() {
       </div>
 
       <header className="sticky top-0 z-50 bg-white border-b border-[#E5E7EB]" style={{ height: '56px' }}>
-        <div className="flex items-center justify-between px-4 h-full max-w-[1800px] mx-auto">
+        <div className="flex items-center justify-between px-3 sm:px-4 h-full max-w-[1800px] mx-auto">
           {/* Left: Logo */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <span className="w-2 h-2 rounded-full bg-[#DC2626] animate-pulse-dot" />
             <span
-              className="px-2 py-0.5 bg-[#DC2626] text-white font-mono"
+              className="px-1.5 sm:px-2 py-0.5 bg-[#DC2626] text-white font-mono"
               style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '2px' }}
             >
               LIVE
             </span>
             <Link to="/" className="no-underline hidden sm:block">
-              <span style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.5px', color: '#111827' }}>
+              <span style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.5px', color: '#111827' }}>
                 IRAN <span style={{ color: '#DC2626' }}>CONFLICT</span> MONITOR
               </span>
             </Link>
@@ -84,55 +89,61 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Right: Clocks */}
-          <div className="hidden md:flex items-center gap-4 shrink-0">
-            <div className="text-right">
-              <div className="font-mono text-[12px] text-[#111827]">{clocks.utc.time}</div>
-              <div className="text-[9px] text-[#9CA3AF] uppercase tracking-wider">UTC</div>
+          {/* Right: Clocks + hamburger */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden md:flex items-center gap-3">
+              <div className="text-right">
+                <div className="font-mono text-[12px] text-[#111827]">{clocks.utc.time}</div>
+                <div className="text-[9px] text-[#9CA3AF] uppercase tracking-wider">UTC</div>
+              </div>
+              <div className="text-right">
+                <div className="font-mono text-[12px] text-[#D97706]">{clocks.irst.time}</div>
+                <div className="text-[9px] text-[#9CA3AF] uppercase tracking-wider">IRST</div>
+              </div>
             </div>
-            <div className="text-right">
-              <div className="font-mono text-[12px] text-[#D97706]">{clocks.irst.time}</div>
-              <div className="text-[9px] text-[#9CA3AF] uppercase tracking-wider">IRST</div>
-            </div>
-          </div>
 
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-1.5 text-[#6B7280] bg-transparent border-0 cursor-pointer hover:text-[#111827]"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              {mobileOpen ? (
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
-              ) : (
-                <path fillRule="evenodd" d="M3 5h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2z" />
-              )}
-            </svg>
-          </button>
+            {/* Mobile hamburger — 44px touch target */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden flex items-center justify-center w-10 h-10 text-[#6B7280] bg-transparent border-0 cursor-pointer hover:text-[#111827] rounded-[4px] active:bg-gray-100 transition-colors"
+              aria-label="Toggle navigation"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                {mobileOpen ? (
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
+                ) : (
+                  <path fillRule="evenodd" d="M3 5h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2z" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
 
-        {/* Mobile nav drawer */}
+        {/* Mobile nav drawer with backdrop */}
         {mobileOpen && (
-          <nav className="lg:hidden absolute top-[56px] left-0 right-0 bg-white border-b border-[#E5E7EB] shadow-lg z-40 px-4 py-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2.5 text-[13px] font-medium no-underline rounded-[4px] ${
-                  location.pathname === link.to
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="mt-3 pt-3 border-t border-[#E5E7EB] flex gap-4 px-3">
-              <span className="font-mono text-[11px] text-[#6B7280]">{clocks.utc.time} <span className="text-[9px] text-[#9CA3AF]">UTC</span></span>
-              <span className="font-mono text-[11px] text-[#D97706]">{clocks.irst.time} <span className="text-[9px] text-[#9CA3AF]">IRST</span></span>
-            </div>
-          </nav>
+          <>
+            <div className="lg:hidden fixed inset-0 top-[56px] bg-black/20 z-30" onClick={() => setMobileOpen(false)} />
+            <nav className="lg:hidden absolute top-[56px] left-0 right-0 bg-white border-b border-[#E5E7EB] shadow-lg z-40 px-4 py-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center px-3 py-3 text-[14px] font-medium no-underline rounded-[6px] transition-colors ${
+                    location.pathname === link.to
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-500 active:bg-gray-50'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="mt-2 pt-3 border-t border-[#E5E7EB] flex gap-4 px-3 pb-2">
+                <span className="font-mono text-[12px] text-[#6B7280]">{clocks.utc.time} <span className="text-[9px] text-[#9CA3AF]">UTC</span></span>
+                <span className="font-mono text-[12px] text-[#D97706]">{clocks.irst.time} <span className="text-[9px] text-[#9CA3AF]">IRST</span></span>
+              </div>
+            </nav>
+          </>
         )}
       </header>
     </>

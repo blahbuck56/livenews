@@ -173,10 +173,10 @@ export default function LiveFeed() {
   );
 
   return (
-    <div className="max-w-[1800px] mx-auto px-4 py-4">
+    <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
       <div className="lg:hidden flex gap-2 mb-3">
-        <button onClick={() => setMobileDrawer(mobileDrawer === 'left' ? null : 'left')} className="text-[11px] px-3 py-1.5 border bg-white text-[#374151] cursor-pointer rounded-[4px] hover:bg-gray-50 transition-colors">Filters</button>
-        <button onClick={() => setMobileDrawer(mobileDrawer === 'right' ? null : 'right')} className="text-[11px] px-3 py-1.5 border bg-white text-[#374151] cursor-pointer rounded-[4px] hover:bg-gray-50 transition-colors">Widgets</button>
+        <button onClick={() => setMobileDrawer(mobileDrawer === 'left' ? null : 'left')} className={`text-[12px] px-4 py-2 border bg-white text-[#374151] cursor-pointer rounded-[6px] transition-colors active:bg-gray-100 ${mobileDrawer === 'left' ? 'border-[#111827] font-medium' : ''}`}>Filters</button>
+        <button onClick={() => setMobileDrawer(mobileDrawer === 'right' ? null : 'right')} className={`text-[12px] px-4 py-2 border bg-white text-[#374151] cursor-pointer rounded-[6px] transition-colors active:bg-gray-100 ${mobileDrawer === 'right' ? 'border-[#111827] font-medium' : ''}`}>Widgets</button>
       </div>
       {mobileDrawer === 'left' && <div className="lg:hidden mb-4">{leftSidebar}</div>}
       {mobileDrawer === 'right' && <div className="lg:hidden mb-4">{rightSidebar}</div>}
@@ -204,7 +204,7 @@ export default function LiveFeed() {
                 const isDeveloping = article.tags.includes('DEVELOPING');
                 return (
                   <a key={article.id} href={article.url} target="_blank" rel="noopener noreferrer"
-                    className={`card block p-4 no-underline transition-all hover:bg-[#F9FAFB] ${isBreaking ? 'border-l-[3px] border-l-[#DC2626] !bg-[#FEF2F2]' : isDeveloping ? 'border-l-[3px] border-l-[#D97706] !bg-[#FFFBEB]' : ''}`}
+                    className={`card block p-3 sm:p-4 no-underline transition-all hover:bg-[#F9FAFB] active:bg-[#F3F4F6] ${isBreaking ? 'border-l-[3px] border-l-[#DC2626] !bg-[#FEF2F2]' : isDeveloping ? 'border-l-[3px] border-l-[#D97706] !bg-[#FFFBEB]' : ''}`}
                   >
                     <div className="flex gap-3">
                       <div className="flex-1 min-w-0">
@@ -212,7 +212,7 @@ export default function LiveFeed() {
                           <span style={{ fontSize: '11px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' as const }}>{article.source}</span>
                           <span className="font-mono text-[11px] text-[#9CA3AF]">{timeAgo(article.publishedAt)}</span>
                         </div>
-                        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', letterSpacing: '-0.3px', lineHeight: '1.3', margin: '0 0 4px 0' }}>{article.title}</h3>
+                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', letterSpacing: '-0.3px', lineHeight: '1.35', margin: '0 0 4px 0' }}>{article.title}</h3>
                         {article.description && <p className="line-clamp-2" style={{ fontSize: '13px', color: '#6B7280', lineHeight: '1.55', margin: 0 }}>{article.description}</p>}
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {article.tags.map((tag) => (
@@ -224,7 +224,7 @@ export default function LiveFeed() {
                         </div>
                       </div>
                       {article.imageUrl && (
-                        <img src={article.imageUrl} alt="" className="w-20 h-[60px] object-cover rounded-[4px] shrink-0 mt-1" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                        <img src={article.imageUrl} alt="" className="hidden sm:block w-20 h-[60px] object-cover rounded-[4px] shrink-0 mt-1" onError={(e) => (e.currentTarget.style.display = 'none')} />
                       )}
                     </div>
                   </a>

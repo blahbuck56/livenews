@@ -39,31 +39,35 @@ export default function Sources() {
   const selectStyle = "px-3 py-1.5 text-[12px] border bg-white text-[#111827] cursor-pointer outline-none focus:border-[#6B7280] rounded-[4px]";
 
   return (
-    <div className="max-w-[1800px] mx-auto px-4 py-4">
+    <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
       <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Source Directory</h1>
 
       {/* Filters */}
-      <div className="card p-4 mb-4">
-        <div className="flex flex-wrap gap-3 items-center">
+      <div className="card p-3 sm:p-4 mb-4">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 items-stretch sm:items-center">
           <input type="text" placeholder="Search sources..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="px-3 py-1.5 text-[12px] border bg-white text-[#111827] placeholder-[#9CA3AF] w-56 outline-none focus:border-[#6B7280] rounded-[4px]" />
-          <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} className={selectStyle}>
-            <option value="all">All Categories</option>
-            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select value={biasFilter} onChange={(e) => setBiasFilter(e.target.value)} className={selectStyle}>
-            <option value="all">All Bias</option>
-            {biases.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={selectStyle}>
-            <option value="all">All Types</option>
-            {types.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <div className="flex border rounded-[4px] overflow-hidden ml-auto">
-            <button onClick={() => setViewMode('card')} className={`px-3 py-1.5 text-[11px] font-medium cursor-pointer border-0 transition-colors ${viewMode === 'card' ? 'bg-[#111827] text-white' : 'bg-white text-[#6B7280] hover:bg-gray-50'}`}>Cards</button>
-            <button onClick={() => setViewMode('table')} className={`px-3 py-1.5 text-[11px] font-medium cursor-pointer border-0 border-l transition-colors ${viewMode === 'table' ? 'bg-[#111827] text-white' : 'bg-white text-[#6B7280] hover:bg-gray-50'}`}>Table</button>
+            className="px-3 py-2 text-[13px] border bg-white text-[#111827] placeholder-[#9CA3AF] w-full sm:w-56 outline-none focus:border-[#6B7280] rounded-[4px]" />
+          <div className="flex gap-2 flex-wrap">
+            <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} className={selectStyle + " flex-1 sm:flex-none"}>
+              <option value="all">All Categories</option>
+              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select value={biasFilter} onChange={(e) => setBiasFilter(e.target.value)} className={selectStyle + " flex-1 sm:flex-none"}>
+              <option value="all">All Bias</option>
+              {biases.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={selectStyle + " flex-1 sm:flex-none"}>
+              <option value="all">All Types</option>
+              {types.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
           </div>
-          <span className="text-[10px] text-[#9CA3AF]">{filtered.length} sources</span>
+          <div className="flex items-center justify-between sm:justify-start gap-3 sm:ml-auto">
+            <div className="flex border rounded-[4px] overflow-hidden">
+              <button onClick={() => setViewMode('card')} className={`px-3 py-2 text-[11px] font-medium cursor-pointer border-0 transition-colors ${viewMode === 'card' ? 'bg-[#111827] text-white' : 'bg-white text-[#6B7280] active:bg-gray-100'}`}>Cards</button>
+              <button onClick={() => setViewMode('table')} className={`px-3 py-2 text-[11px] font-medium cursor-pointer border-0 border-l transition-colors ${viewMode === 'table' ? 'bg-[#111827] text-white' : 'bg-white text-[#6B7280] active:bg-gray-100'}`}>Table</button>
+            </div>
+            <span className="text-[10px] text-[#9CA3AF]">{filtered.length} sources</span>
+          </div>
         </div>
       </div>
 

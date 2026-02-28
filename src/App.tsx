@@ -11,7 +11,7 @@ import Sources from './pages/Sources'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-[#F8F9FA] pb-12">
       <Navbar />
       <Routes>
         <Route path="/" element={<LiveFeed />} />

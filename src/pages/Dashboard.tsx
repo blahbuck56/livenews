@@ -47,16 +47,16 @@ export default function Dashboard() {
   const entities = useMemo(() => extractEntities(articles.map((a) => a.title)), [articles]);
 
   return (
-    <div className="max-w-[1800px] mx-auto px-4 py-4">
+    <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
       <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>War Dashboard</h1>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-4">
         {isLoading ? Array.from({ length: 4 }).map((_, i) => <MetricSkeleton key={i} />) : (<>
-          <div className="card p-4"><SectionHeader>Articles (24h)</SectionHeader><div className="text-[32px] font-bold font-mono leading-none text-[#111827]">{articleCount}</div></div>
-          <div className="card p-4"><SectionHeader>Avg Sentiment</SectionHeader><div className="text-[32px] font-bold font-mono leading-none" style={{ color: sentimentColor }}>{avgSentiment.toFixed(2)}</div><div className="text-[10px] font-mono text-[#9CA3AF] mt-1">comparative score</div></div>
-          <div className="card p-4"><SectionHeader>Sources Reporting</SectionHeader><div className="text-[32px] font-bold font-mono leading-none text-[#111827]">{uniqueSources}</div></div>
-          <div className="card p-4"><SectionHeader>Countries Mentioned</SectionHeader><div className="text-[32px] font-bold font-mono leading-none text-[#111827]">{countriesMentioned}</div></div>
+          <div className="card p-3 sm:p-4"><SectionHeader>Articles (24h)</SectionHeader><div className="text-[24px] sm:text-[32px] font-bold font-mono leading-none text-[#111827]">{articleCount}</div></div>
+          <div className="card p-3 sm:p-4"><SectionHeader>Avg Sentiment</SectionHeader><div className="text-[24px] sm:text-[32px] font-bold font-mono leading-none" style={{ color: sentimentColor }}>{avgSentiment.toFixed(2)}</div><div className="text-[10px] font-mono text-[#9CA3AF] mt-1">comparative score</div></div>
+          <div className="card p-3 sm:p-4"><SectionHeader>Sources Reporting</SectionHeader><div className="text-[24px] sm:text-[32px] font-bold font-mono leading-none text-[#111827]">{uniqueSources}</div></div>
+          <div className="card p-3 sm:p-4"><SectionHeader>Countries Mentioned</SectionHeader><div className="text-[24px] sm:text-[32px] font-bold font-mono leading-none text-[#111827]">{countriesMentioned}</div></div>
         </>)}
       </div>
 
@@ -88,8 +88,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
         <div className="card p-4">
           <SectionHeader>Strike Location Map</SectionHeader>
-          <div className="h-[300px]">
-            <MapContainer center={[32.43, 53.69]} zoom={5} scrollWheelZoom={false} style={{ height: '100%', width: '100%', borderRadius: '6px' }}>
+          <div className="h-[250px] sm:h-[300px]">
+            <MapContainer center={[32.43, 53.69]} zoom={5} scrollWheelZoom={false} dragging={true} style={{ height: '100%', width: '100%', borderRadius: '6px' }}>
               <TileLayer attribution='&copy; CARTO' url={CARTO_TILES} />
               {strikeLocations.map((loc) => (
                 <CircleMarker key={loc.name} center={[loc.lat, loc.lng]} radius={8} fillColor="#DC2626" fillOpacity={0.7} color="#FFFFFF" weight={2}>
@@ -103,7 +103,7 @@ export default function Dashboard() {
           <SectionHeader>Top Sources</SectionHeader>
           {topSources.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topSources} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis type="number" tick={monoTick} /><YAxis type="category" dataKey="name" tick={{ ...monoTick, fill: '#6B7280' }} width={80} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} /><Bar dataKey="count" fill="#2563EB" radius={[0, 3, 3, 0]} /></BarChart>
+              <BarChart data={topSources} layout="vertical" margin={{ left: 10 }}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis type="number" tick={monoTick} /><YAxis type="category" dataKey="name" tick={{ ...monoTick, fill: '#6B7280', fontSize: 8 }} width={70} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} /><Bar dataKey="count" fill="#2563EB" radius={[0, 3, 3, 0]} /></BarChart>
             </ResponsiveContainer>
           ) : <div className="h-[300px] flex items-center justify-center text-[12px] text-[#9CA3AF]">{isLoading ? 'Loading...' : 'No source data available'}</div>}
         </div>
@@ -115,7 +115,7 @@ export default function Dashboard() {
           <SectionHeader>Keyword Frequency</SectionHeader>
           {keywords.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={keywords.slice(0, 15)} layout="vertical" margin={{ left: 60 }}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis type="number" tick={monoTick} /><YAxis type="category" dataKey="word" tick={{ ...monoTick, fill: '#6B7280' }} width={60} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} /><Bar dataKey="count" fill="#7C3AED" radius={[0, 3, 3, 0]} /></BarChart>
+              <BarChart data={keywords.slice(0, 15)} layout="vertical" margin={{ left: 10 }}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis type="number" tick={monoTick} /><YAxis type="category" dataKey="word" tick={{ ...monoTick, fill: '#6B7280', fontSize: 8 }} width={55} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} /><Bar dataKey="count" fill="#7C3AED" radius={[0, 3, 3, 0]} /></BarChart>
             </ResponsiveContainer>
           ) : <div className="h-[300px] flex items-center justify-center text-[12px] text-[#9CA3AF]">{isLoading ? 'Analyzing...' : 'No keyword data available'}</div>}
         </div>
@@ -135,13 +135,13 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
         <div className="card p-4">
           <SectionHeader>Oil Price (Brent Crude)</SectionHeader>
-          <div className="text-[32px] font-bold text-[#D97706] font-mono leading-none mb-1">$94.82</div>
+          <div className="text-[24px] sm:text-[32px] font-bold text-[#D97706] font-mono leading-none mb-1">$94.82</div>
           <div className="text-[12px] text-[#DC2626]">+$6.34 (+7.2%) since strikes began</div>
           <div className="text-[10px] font-mono text-[#9CA3AF] mt-2">Delayed feed. Markets volatile.</div>
         </div>
         <div className="card p-4">
           <SectionHeader>Conflict Escalation Index</SectionHeader>
-          <div className="text-[32px] font-bold text-[#DC2626] font-mono leading-none mb-1">8.7 / 10</div>
+          <div className="text-[24px] sm:text-[32px] font-bold text-[#DC2626] font-mono leading-none mb-1">8.7 / 10</div>
           <div className="text-[12px] text-[#DC2626]">CRITICAL — Active military operations</div>
           <div className="text-[10px] font-mono text-[#9CA3AF] mt-2">Based on GDELT Goldstein Scale</div>
         </div>

@@ -85,16 +85,16 @@ export default function SocialPulse() {
   const gaugeAngle = 180 * ((gaugeValue + 100) / 200); // map -100..100 to 0..180 degrees
 
   return (
-    <div className="max-w-[1800px] mx-auto px-4 py-4">
+    <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
       <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Social Pulse</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Left: Social Feed */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 order-1">
           <div className="flex border-b mb-4">
             {(['twitter', 'reddit', 'telegram'] as const).map((tab) => (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-[13px] font-medium border-b-2 bg-transparent cursor-pointer transition-colors ${activeTab === tab ? 'border-[#DC2626] text-[#111827]' : 'border-transparent text-[#6B7280] hover:text-[#111827]'}`}>
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-3 text-[13px] font-medium border-b-2 bg-transparent cursor-pointer transition-colors ${activeTab === tab ? 'border-[#DC2626] text-[#111827]' : 'border-transparent text-[#6B7280] active:text-[#111827]'}`}>
                 {tab === 'twitter' ? 'Twitter/X' : tab === 'reddit' ? 'Reddit' : 'Telegram'}
               </button>
             ))}
@@ -165,8 +165,8 @@ export default function SocialPulse() {
           )}
         </div>
 
-        {/* Right: Sentiment Dashboard */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Right: Sentiment Dashboard — shows first on mobile */}
+        <div className="lg:col-span-2 space-y-4 order-first lg:order-last">
           {/* Gauge */}
           <div className="card p-4 text-center">
             <SectionHeader>Overall Sentiment</SectionHeader>

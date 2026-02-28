@@ -8,7 +8,7 @@ export default function LiveVideo() {
   const grid = videoSources.slice(1);
 
   return (
-    <div className="max-w-[1800px] mx-auto px-4 py-4">
+    <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
       <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Live Video</h1>
 
       {/* Featured */}
@@ -85,7 +85,7 @@ export default function LiveVideo() {
             { title: 'Gulf Airspace Closures', channel: 'France 24' },
             { title: 'Pentagon Briefing', channel: 'ABC News' },
           ].map((v, i) => (
-            <div key={i} className="shrink-0 w-52 card overflow-hidden hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-shadow cursor-pointer">
+            <div key={i} className="shrink-0 w-40 sm:w-52 card overflow-hidden hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-shadow cursor-pointer">
               <div className="h-28 bg-gray-100 flex items-center justify-center">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="#9CA3AF"><path d="M8 5v14l11-7z" /></svg>
               </div>

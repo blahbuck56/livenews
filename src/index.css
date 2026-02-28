@@ -30,17 +30,30 @@ html, body, #root {
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
 }
 
 * {
   border-color: var(--color-border);
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Custom scrollbars */
+/* Safe area insets for notch devices */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Custom scrollbars — hide on mobile for cleaner look */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+@media (max-width: 768px) {
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
+}
 
 /* Animations */
 @keyframes ticker-scroll {
@@ -65,6 +78,12 @@ html, body, #root {
 
 .animate-ticker {
   animation: ticker-scroll 60s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .animate-ticker {
+    animation: ticker-scroll 30s linear infinite;
+  }
 }
 
 .animate-pulse-dot {
@@ -119,7 +138,28 @@ html, body, #root {
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.card:hover {
-  box-shadow: var(--shadow-card-hover);
-  border-color: var(--color-border-hover);
+/* Only apply hover effects on non-touch devices */
+@media (hover: hover) {
+  .card:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-border-hover);
+  }
+}
+
+/* Ensure touch targets are at least 44px on mobile */
+@media (max-width: 768px) {
+  button, a, select, input[type="checkbox"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Exceptions for inline small elements */
+  .card a, .card button, span a {
+    min-height: auto;
+    min-width: auto;
+  }
+
+  select {
+    min-height: 44px;
+  }
 }
