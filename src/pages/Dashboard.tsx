@@ -1,22 +1,15 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import { useCombinedNews, useGdeltTimeline, useGdeltTone } from '../hooks/useNews';
-import { extractKeywords, extractEntities } from '../utils/keywords';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import { useCombinedNews, useGdeltTimeline, useGdeltTone } from '../hooks/useGdeltArticles';
+import { extractKeywords, extractEntities } from '../lib/keywords';
 import { strikeLocations } from '../data/strikeLocations';
-import { MetricSkeleton, ChartSkeleton } from '../components/LoadingSkeleton';
-import ErrorState from '../components/ErrorState';
+import { timelineEvents } from '../data/timelineEvents';
+import { MetricSkeleton, ChartSkeleton } from '../components/common/LoadingSkeleton';
+import SectionHeader from '../components/common/SectionHeader';
 
-// Fix default marker icon
-const defaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+const CARTO_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+const monoTick = { fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fill: '#9CA3AF' };
 
 export default function Dashboard() {
   const { articles, isLoading } = useCombinedNews();
@@ -24,233 +17,139 @@ export default function Dashboard() {
   const tone = useGdeltTone();
 
   const articleCount = articles.length;
-
-  const avgSentiment = useMemo(() => {
-    if (articles.length === 0) return 0;
-    const sum = articles.reduce((acc, a) => acc + (a.sentiment || 0), 0);
-    return sum / articles.length;
-  }, [articles]);
-
-  const uniqueSources = useMemo(() => {
-    return new Set(articles.map((a) => a.source)).size;
-  }, [articles]);
-
+  const avgSentiment = useMemo(() => articles.length ? articles.reduce((s, a) => s + a.sentiment, 0) / articles.length : 0, [articles]);
+  const uniqueSources = useMemo(() => new Set(articles.map((a) => a.source)).size, [articles]);
   const countriesMentioned = useMemo(() => {
-    const countries = new Set<string>();
-    const countryNames = ['Iran', 'Israel', 'Iraq', 'Syria', 'Lebanon', 'Yemen', 'Saudi', 'Qatar', 'UAE', 'Turkey', 'Russia', 'China', 'France', 'Germany', 'UK', 'United States'];
-    for (const a of articles) {
-      for (const c of countryNames) {
-        if (a.title.includes(c)) countries.add(c);
-      }
-    }
-    return countries.size;
+    const names = ['Iran', 'Israel', 'Iraq', 'Syria', 'Lebanon', 'Yemen', 'Saudi', 'Qatar', 'UAE', 'Turkey', 'Russia', 'China', 'France', 'Germany', 'UK', 'United States'];
+    const found = new Set<string>();
+    for (const a of articles) for (const c of names) if (a.title.includes(c)) found.add(c);
+    return found.size;
   }, [articles]);
 
+  const sentimentColor = avgSentiment > 0.5 ? '#16A34A' : avgSentiment < -0.5 ? '#DC2626' : '#D97706';
+  const timelineData = (timeline.data || []).slice(-48).map((d: { date: string; count: number }) => ({ time: d.date?.slice(8, 10) + ':' + (d.date?.slice(10, 12) || '00'), count: d.count }));
+  const toneData = (tone.data || []).slice(-48).map((d: { date: string; tone: number }) => ({ time: d.date?.slice(8, 10) + ':' + (d.date?.slice(10, 12) || '00'), tone: d.tone }));
   const topSources = useMemo(() => {
     const freq: Record<string, number> = {};
-    for (const a of articles) {
-      freq[a.source] = (freq[a.source] || 0) + 1;
-    }
-    return Object.entries(freq)
-      .map(([name, count]) => ({ name: name.length > 25 ? name.slice(0, 25) + '...' : name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 15);
+    for (const a of articles) freq[a.source] = (freq[a.source] || 0) + 1;
+    return Object.entries(freq).map(([name, count]) => ({ name: name.length > 25 ? name.slice(0, 25) + '..' : name, count })).sort((a, b) => b.count - a.count).slice(0, 15);
   }, [articles]);
-
-  const keywords = useMemo(() => {
-    return extractKeywords(articles.map((a) => a.title), 20);
-  }, [articles]);
-
-  const entities = useMemo(() => {
-    return extractEntities(articles.map((a) => a.title));
-  }, [articles]);
-
-  const sentimentColor = avgSentiment > 0.2 ? '#16A34A' : avgSentiment < -0.2 ? '#DC2626' : '#D97706';
-
-  const timelineData = (timeline.data || []).slice(-48).map((d) => ({
-    time: d.date?.slice(8, 10) + ':' + (d.date?.slice(10, 12) || '00'),
-    count: d.count,
-  }));
-
-  const toneData = (tone.data || []).slice(-48).map((d) => ({
-    time: d.date?.slice(8, 10) + ':' + (d.date?.slice(10, 12) || '00'),
-    tone: d.tone,
-  }));
+  const keywords = useMemo(() => extractKeywords(articles.map((a) => a.title), 20), [articles]);
+  const entities = useMemo(() => extractEntities(articles.map((a) => a.title)), [articles]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4">
-      <h1 className="text-lg font-bold text-[#111827] mb-4">War Dashboard</h1>
+    <div className="max-w-[1800px] mx-auto px-4 py-4">
+      <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>War Dashboard</h1>
 
-      {/* Row 1: Key Metrics */}
+      {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <MetricSkeleton key={i} />)
-        ) : (
-          <>
-            <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-              <div className="text-[11px] font-medium text-[#6B7280] uppercase tracking-wider mb-1">Articles (24h)</div>
-              <div className="text-3xl font-bold text-[#111827] font-mono">{articleCount}</div>
-            </div>
-            <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-              <div className="text-[11px] font-medium text-[#6B7280] uppercase tracking-wider mb-1">Sentiment Score</div>
-              <div className="text-3xl font-bold font-mono" style={{ color: sentimentColor }}>
-                {avgSentiment.toFixed(2)}
-              </div>
-              <div className="text-[10px] text-[#9CA3AF]">Scale: -1.0 to +1.0</div>
-            </div>
-            <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-              <div className="text-[11px] font-medium text-[#6B7280] uppercase tracking-wider mb-1">Sources Reporting</div>
-              <div className="text-3xl font-bold text-[#111827] font-mono">{uniqueSources}</div>
-            </div>
-            <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-              <div className="text-[11px] font-medium text-[#6B7280] uppercase tracking-wider mb-1">Countries Mentioned</div>
-              <div className="text-3xl font-bold text-[#111827] font-mono">{countriesMentioned}</div>
-            </div>
-          </>
-        )}
+        {isLoading ? Array.from({ length: 4 }).map((_, i) => <MetricSkeleton key={i} />) : (<>
+          <div className="card p-4"><SectionHeader>Articles (24h)</SectionHeader><div className="text-[32px] font-bold font-mono leading-none text-[#111827]">{articleCount}</div></div>
+          <div className="card p-4"><SectionHeader>Avg Sentiment</SectionHeader><div className="text-[32px] font-bold font-mono leading-none" style={{ color: sentimentColor }}>{avgSentiment.toFixed(2)}</div><div className="text-[10px] font-mono text-[#9CA3AF] mt-1">comparative score</div></div>
+          <div className="card p-4"><SectionHeader>Sources Reporting</SectionHeader><div className="text-[32px] font-bold font-mono leading-none text-[#111827]">{uniqueSources}</div></div>
+          <div className="card p-4"><SectionHeader>Countries Mentioned</SectionHeader><div className="text-[32px] font-bold font-mono leading-none text-[#111827]">{countriesMentioned}</div></div>
+        </>)}
       </div>
 
-      {/* Row 2: Charts */}
+      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
         {timeline.isLoading ? <ChartSkeleton /> : (
-          <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-            <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Article Volume Over Time</h3>
+          <div className="card p-4">
+            <SectionHeader>Article Volume / Hour</SectionHeader>
             {timelineData.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={timelineData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} />
-                  <Area type="monotone" dataKey="count" stroke="#2563EB" fill="#DBEAFE" />
-                </AreaChart>
+                <AreaChart data={timelineData}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis dataKey="time" tick={monoTick} /><YAxis tick={monoTick} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4, fontFamily: 'JetBrains Mono' }} /><Area type="monotone" dataKey="count" stroke="#DC2626" fill="#DC2626" fillOpacity={0.1} /></AreaChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="h-[220px] flex items-center justify-center text-xs text-[#9CA3AF]">Loading timeline data...</div>
-            )}
+            ) : <div className="h-[220px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Loading...</div>}
           </div>
         )}
-
         {tone.isLoading ? <ChartSkeleton /> : (
-          <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-            <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Sentiment Over Time</h3>
+          <div className="card p-4">
+            <SectionHeader>Sentiment Over Time</SectionHeader>
             {toneData.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={toneData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} />
-                  <Line type="monotone" dataKey="tone" stroke="#DC2626" dot={false} />
-                </LineChart>
+                <LineChart data={toneData}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis dataKey="time" tick={monoTick} /><YAxis tick={monoTick} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4, fontFamily: 'JetBrains Mono' }} /><Line type="monotone" dataKey="tone" stroke="#DC2626" dot={false} strokeWidth={2} /></LineChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="h-[220px] flex items-center justify-center text-xs text-[#9CA3AF]">Loading sentiment data...</div>
-            )}
+            ) : <div className="h-[220px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Loading...</div>}
           </div>
         )}
       </div>
 
-      {/* Row 3: Map + Top Sources */}
+      {/* Map + Sources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
-        <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-          <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Strike Location Map</h3>
+        <div className="card p-4">
+          <SectionHeader>Strike Location Map</SectionHeader>
           <div className="h-[300px]">
-            <MapContainer center={[33.5, 51.5]} zoom={5} scrollWheelZoom={false} style={{ height: '100%', width: '100%', borderRadius: '6px' }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+            <MapContainer center={[32.43, 53.69]} zoom={5} scrollWheelZoom={false} style={{ height: '100%', width: '100%', borderRadius: '6px' }}>
+              <TileLayer attribution='&copy; CARTO' url={CARTO_TILES} />
               {strikeLocations.map((loc) => (
-                <Marker key={loc.name} position={[loc.lat, loc.lng]} icon={defaultIcon}>
-                  <Popup>
-                    <div>
-                      <strong>{loc.name}</strong>
-                      <br />
-                      <span style={{ fontSize: 12 }}>{loc.description}</span>
-                    </div>
-                  </Popup>
-                </Marker>
+                <CircleMarker key={loc.name} center={[loc.lat, loc.lng]} radius={8} fillColor="#DC2626" fillOpacity={0.7} color="#FFFFFF" weight={2}>
+                  <Popup><strong>{loc.name}</strong><br /><span style={{ fontSize: 12 }}>{loc.description}</span></Popup>
+                </CircleMarker>
               ))}
             </MapContainer>
           </div>
         </div>
-
-        <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-          <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Top Sources</h3>
+        <div className="card p-4">
+          <SectionHeader>Top Sources</SectionHeader>
           {topSources.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topSources} layout="vertical" margin={{ left: 80 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis type="number" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#6B7280' }} width={80} />
-                <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} />
-                <Bar dataKey="count" fill="#2563EB" radius={[0, 3, 3, 0]} />
-              </BarChart>
+              <BarChart data={topSources} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis type="number" tick={monoTick} /><YAxis type="category" dataKey="name" tick={{ ...monoTick, fill: '#6B7280' }} width={80} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} /><Bar dataKey="count" fill="#2563EB" radius={[0, 3, 3, 0]} /></BarChart>
             </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-xs text-[#9CA3AF]">Loading source data...</div>
-          )}
+          ) : <div className="h-[300px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Loading...</div>}
         </div>
       </div>
 
-      {/* Row 4: Keywords + Entities */}
+      {/* Keywords + Entities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
-        <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-          <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Keyword Frequency</h3>
+        <div className="card p-4">
+          <SectionHeader>Keyword Frequency</SectionHeader>
           {keywords.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={keywords.slice(0, 15)} layout="vertical" margin={{ left: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis type="number" tick={{ fontSize: 10, fill: '#9CA3AF' }} />
-                <YAxis type="category" dataKey="word" tick={{ fontSize: 10, fill: '#6B7280' }} width={60} />
-                <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} />
-                <Bar dataKey="count" fill="#7C3AED" radius={[0, 3, 3, 0]} />
-              </BarChart>
+              <BarChart data={keywords.slice(0, 15)} layout="vertical" margin={{ left: 60 }}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis type="number" tick={monoTick} /><YAxis type="category" dataKey="word" tick={{ ...monoTick, fill: '#6B7280' }} width={60} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} /><Bar dataKey="count" fill="#7C3AED" radius={[0, 3, 3, 0]} /></BarChart>
             </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-xs text-[#9CA3AF]">Analyzing keywords...</div>
-          )}
+          ) : <div className="h-[300px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Analyzing...</div>}
         </div>
-
-        <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-          <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Entity Extraction</h3>
+        <div className="card p-4">
+          <SectionHeader>Key Entities</SectionHeader>
           <div className="space-y-4">
             {(['person', 'org', 'location'] as const).map((type) => {
-              const filtered = entities.filter((e) => e.type === type).slice(0, 8);
-              if (filtered.length === 0) return null;
-              return (
-                <div key={type}>
-                  <h4 className="text-[10px] font-semibold text-[#9CA3AF] uppercase mb-2">
-                    {type === 'person' ? 'People' : type === 'org' ? 'Organizations' : 'Locations'}
-                  </h4>
-                  <div className="flex flex-wrap gap-1.5">
-                    {filtered.map((e) => (
-                      <span key={e.name} className="px-2 py-0.5 text-[11px] bg-[#F3F4F6] text-[#374151] rounded" style={{ borderRadius: '3px' }}>
-                        {e.name} <span className="text-[#9CA3AF]">({e.count})</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
+              const items = entities.filter((e) => e.type === type).slice(0, 8);
+              if (!items.length) return null;
+              return (<div key={type}><div className="section-header mb-2" style={{ fontSize: '9px' }}>{type === 'person' ? 'People' : type === 'org' ? 'Organizations' : 'Locations'}</div><div className="flex flex-wrap gap-1.5">{items.map((e) => (<span key={e.name} className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-[3px]" style={{ fontSize: '11px' }}>{e.name} <span className="text-[#9CA3AF]">({e.count})</span></span>))}</div></div>);
             })}
           </div>
         </div>
       </div>
 
-      {/* Row 5: Oil Price + Escalation */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-          <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Oil Price (Brent Crude)</h3>
-          <div className="text-3xl font-bold text-[#D97706] font-mono mb-1">$94.82</div>
-          <div className="text-xs text-[#DC2626]">+$6.34 (+7.2%) since strikes began</div>
-          <div className="text-[10px] font-mono text-[#9CA3AF] mt-2">Updated: Delayed feed. Markets volatile.</div>
+      {/* Oil + Escalation */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+        <div className="card p-4">
+          <SectionHeader>Oil Price (Brent Crude)</SectionHeader>
+          <div className="text-[32px] font-bold text-[#D97706] font-mono leading-none mb-1">$94.82</div>
+          <div className="text-[12px] text-[#DC2626]">+$6.34 (+7.2%) since strikes began</div>
+          <div className="text-[10px] font-mono text-[#9CA3AF] mt-2">Delayed feed. Markets volatile.</div>
         </div>
-        <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-          <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Conflict Escalation Index</h3>
-          <div className="text-3xl font-bold text-[#DC2626] font-mono mb-1">8.7 / 10</div>
-          <div className="text-xs text-[#DC2626]">CRITICAL — Active military operations</div>
-          <div className="text-[10px] font-mono text-[#9CA3AF] mt-2">Based on GDELT Goldstein Scale aggregation</div>
+        <div className="card p-4">
+          <SectionHeader>Conflict Escalation Index</SectionHeader>
+          <div className="text-[32px] font-bold text-[#DC2626] font-mono leading-none mb-1">8.7 / 10</div>
+          <div className="text-[12px] text-[#DC2626]">CRITICAL — Active military operations</div>
+          <div className="text-[10px] font-mono text-[#9CA3AF] mt-2">Based on GDELT Goldstein Scale</div>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="card p-4">
+        <SectionHeader>Escalation Timeline</SectionHeader>
+        <div className="relative mt-4"><div className="absolute top-3 left-0 right-0 h-[2px] bg-[#E5E7EB]" />
+          <div className="flex overflow-x-auto gap-0 pb-4">
+            {timelineEvents.map((ev, i) => (
+              <div key={i} className="flex flex-col items-center min-w-[130px] px-1 relative">
+                <div className={`w-3 h-3 rounded-full border-2 z-10 ${ev.title.includes('Epic Fury') || ev.title.includes('retaliates') || ev.title.includes('close airspace') ? 'bg-[#DC2626] border-[#DC2626]' : 'bg-white border-[#6B7280]'}`} />
+                <div className="mt-2 text-center"><div className="font-mono text-[10px] font-medium text-[#6B7280]">{ev.date}</div><div className="text-[11px] font-semibold text-[#111827] mt-0.5 leading-tight">{ev.title}</div></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

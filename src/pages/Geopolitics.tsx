@@ -1,100 +1,119 @@
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
-import { useGeopoliticsNews } from '../hooks/useGeopoliticsNews';
-import { timelineEvents } from '../data/timeline';
-import { timeAgo } from '../utils/time';
-import { FeedSkeleton } from '../components/LoadingSkeleton';
-import ErrorState from '../components/ErrorState';
-import type { NewsArticle } from '../types';
+import { useGeopoliticsNews } from '../hooks/useGdeltArticles';
+import { timelineEvents } from '../data/timelineEvents';
+import { FeedSkeleton } from '../components/common/LoadingSkeleton';
+import ErrorState from '../components/common/ErrorState';
+import SectionHeader from '../components/common/SectionHeader';
+
+const CARTO_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
 const topicConfig = [
-  { key: 'oil' as const, title: 'Oil & Energy Markets', icon: '#D97706' },
-  { key: 'gulf' as const, title: 'Gulf States Response', icon: '#0D9488' },
-  { key: 'europe' as const, title: 'European Reaction', icon: '#2563EB' },
-  { key: 'russiachina' as const, title: 'Russia & China', icon: '#DC2626' },
-  { key: 'uspolitics' as const, title: 'U.S. Domestic Politics', icon: '#7C3AED' },
-  { key: 'humanitarian' as const, title: 'Humanitarian Impact', icon: '#16A34A' },
+  { key: 'oil', title: 'Oil & Energy', color: '#D97706' },
+  { key: 'gulf', title: 'Gulf States', color: '#0D9488' },
+  { key: 'europe', title: 'Europe & NATO', color: '#2563EB' },
+  { key: 'russiachina', title: 'Russia & China', color: '#DC2626' },
+  { key: 'uspolitics', title: 'U.S. Politics', color: '#7C3AED' },
+  { key: 'humanitarian', title: 'Humanitarian', color: '#16A34A' },
 ];
 
 const conflictZones = [
-  { name: 'Iran', lat: 32.4, lng: 53.7, intensity: 10, color: '#DC2626' },
-  { name: 'Ukraine', lat: 48.4, lng: 31.2, intensity: 8, color: '#D97706' },
-  { name: 'Sudan', lat: 12.8, lng: 30.2, intensity: 7, color: '#D97706' },
-  { name: 'Myanmar', lat: 19.8, lng: 96.1, intensity: 6, color: '#D97706' },
-  { name: 'Gaza', lat: 31.5, lng: 34.5, intensity: 9, color: '#DC2626' },
-  { name: 'Yemen', lat: 15.4, lng: 44.2, intensity: 7, color: '#D97706' },
-  { name: 'Syria', lat: 35.0, lng: 38.0, intensity: 5, color: '#D97706' },
-  { name: 'Lebanon', lat: 33.9, lng: 35.5, intensity: 6, color: '#D97706' },
-  { name: 'Iraq', lat: 33.2, lng: 43.7, intensity: 5, color: '#D97706' },
+  { name: 'Iran', lat: 32.4, lng: 53.7, intensity: 10, color: '#DC2626', connection: 'Primary conflict zone — active strikes' },
+  { name: 'Ukraine', lat: 48.4, lng: 31.2, intensity: 8, color: '#D97706', connection: 'Russia diverting attention; US resources stretched' },
+  { name: 'Sudan', lat: 12.8, lng: 30.2, intensity: 7, color: '#D97706', connection: 'Iran-aligned forces in Red Sea corridor' },
+  { name: 'Myanmar', lat: 19.8, lng: 96.1, intensity: 5, color: '#D97706', connection: 'Chinese influence zone; regional instability' },
+  { name: 'Gaza/Israel', lat: 31.5, lng: 34.5, intensity: 9, color: '#DC2626', connection: 'Direct escalation; IDF two-front operations' },
+  { name: 'Yemen', lat: 15.4, lng: 44.2, intensity: 7, color: '#D97706', connection: 'Houthi proxy attacks on shipping, Iranian supply lines' },
+  { name: 'Syria', lat: 35.0, lng: 38.0, intensity: 5, color: '#D97706', connection: 'Iranian proxy Hezbollah staging ground' },
+  { name: 'Lebanon', lat: 33.9, lng: 35.5, intensity: 6, color: '#D97706', connection: 'Hezbollah launch zone for northern Israel attacks' },
+  { name: 'Somalia', lat: 5.2, lng: 46.2, intensity: 4, color: '#D97706', connection: 'Al-Shabaab disruption; shipping lane risks' },
+  { name: 'Ethiopia', lat: 9.0, lng: 38.7, intensity: 4, color: '#D97706', connection: 'Horn of Africa instability; refugee flows' },
 ];
 
-function ArticleList({ articles, color }: { articles: NewsArticle[]; color: string }) {
-  if (articles.length === 0) {
-    return <p className="text-xs text-[#9CA3AF] italic">No recent articles found</p>;
-  }
-
-  return (
-    <div className="space-y-2">
-      {articles.slice(0, 5).map((a) => (
-        <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer" className="block no-underline">
-          <div className="text-xs font-medium text-[#111827] hover:text-[#2563EB] leading-snug">{a.title}</div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-[#6B7280]">{a.source}</span>
-            <span className="text-[10px] font-mono text-[#9CA3AF]">{timeAgo(a.publishedAt)}</span>
-          </div>
-        </a>
-      ))}
-    </div>
-  );
+function timeAgo(dateStr: string): string {
+  const s = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 export default function Geopolitics() {
   const { data, isLoading, isError, refetch } = useGeopoliticsNews();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4">
-      <h1 className="text-lg font-bold text-[#111827] mb-4">Global Impact</h1>
+    <div className="max-w-[1800px] mx-auto px-4 py-4">
+      <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Global Impact</h1>
 
-      {/* Section 1: Ripple Effects */}
+      {/* Impact Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-        {isLoading ? (
-          Array.from({ length: 6 }).map((_, i) => <FeedSkeleton key={i} count={1} />)
-        ) : isError ? (
-          <div className="col-span-full"><ErrorState message="Failed to fetch geopolitics data" onRetry={refetch} /></div>
-        ) : (
-          topicConfig.map((topic) => (
-            <div key={topic.key} className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: topic.icon }} />
-                <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider">{topic.title}</h3>
-              </div>
-              <ArticleList articles={data?.[topic.key] || []} color={topic.icon} />
+        {isLoading ? Array.from({ length: 6 }).map((_, i) => <FeedSkeleton key={i} count={1} />) :
+         isError ? <div className="col-span-full"><ErrorState message="Failed to load geopolitics data" onRetry={refetch} /></div> :
+         topicConfig.map((topic) => (
+          <div key={topic.key} className="card p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: topic.color }} />
+              <SectionHeader>{topic.title}</SectionHeader>
             </div>
-          ))
-        )}
+            <div className="space-y-2.5">
+              {(data?.[topic.key] || []).length > 0 ? (data?.[topic.key] || []).map((a: { id: string; title: string; url: string; source: string; publishedAt: string }) => (
+                <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer" className="block no-underline hover:bg-gray-50 rounded-[3px] p-1 -mx-1 transition-colors">
+                  <div className="text-[12px] font-medium text-[#111827] leading-snug hover:text-[#2563EB]">{a.title}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-[#6B7280]">{a.source}</span>
+                    <span className="font-mono text-[10px] text-[#9CA3AF]">{timeAgo(a.publishedAt)}</span>
+                  </div>
+                </a>
+              )) : <p className="text-[11px] text-[#9CA3AF] italic">No recent articles</p>}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Section 2: World Conflict Map */}
-      <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4 mb-6">
-        <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Global Conflict Context</h3>
-        <div className="h-[350px]">
-          <MapContainer center={[30, 45]} zoom={3} scrollWheelZoom={false} style={{ height: '100%', width: '100%', borderRadius: '6px' }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+      {/* Conflict Timeline */}
+      <div className="card p-4 mb-6">
+        <SectionHeader>Conflict Timeline</SectionHeader>
+        <div className="relative mt-4">
+          <div className="absolute top-3 left-0 right-0 h-[2px] bg-[#E5E7EB]" />
+          <div className="flex overflow-x-auto gap-0 pb-4">
+            {timelineEvents.map((ev, i) => (
+              <div key={i} className="flex flex-col items-center min-w-[140px] px-1.5 relative group cursor-default">
+                <div className={`w-3 h-3 rounded-full border-2 z-10 transition-transform group-hover:scale-150 ${
+                  ev.title.includes('Epic Fury') || ev.title.includes('retaliates') || ev.title.includes('close airspace')
+                    ? 'bg-[#DC2626] border-[#DC2626]'
+                    : 'bg-white border-[#6B7280] group-hover:border-[#111827]'
+                }`} />
+                <div className="mt-2 text-center">
+                  <div className="font-mono text-[10px] font-medium text-[#6B7280]">{ev.date}</div>
+                  <div className="text-[11px] font-semibold text-[#111827] mt-0.5 leading-tight">{ev.title}</div>
+                  {ev.description && <div className="text-[10px] text-[#9CA3AF] mt-0.5 hidden group-hover:block">{ev.description}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* World Conflict Map */}
+      <div className="card p-4">
+        <SectionHeader>World Conflict Context</SectionHeader>
+        <div className="h-[400px] mt-2">
+          <MapContainer center={[25, 45]} zoom={3} scrollWheelZoom={false} style={{ height: '100%', width: '100%', borderRadius: '6px' }}>
+            <TileLayer attribution='&copy; CARTO' url={CARTO_TILES} />
             {conflictZones.map((zone) => (
               <CircleMarker
                 key={zone.name}
                 center={[zone.lat, zone.lng]}
-                radius={zone.intensity * 3}
+                radius={zone.intensity * 2.5}
                 fillColor={zone.color}
-                fillOpacity={0.5}
+                fillOpacity={zone.name === 'Iran' ? 0.7 : 0.4}
                 color={zone.color}
-                weight={1}
+                weight={zone.name === 'Iran' ? 2 : 1}
               >
                 <Popup>
-                  <strong>{zone.name}</strong><br />
-                  Conflict Intensity: {zone.intensity}/10
+                  <strong>{zone.name}</strong> — Intensity: {zone.intensity}/10<br />
+                  <span style={{ fontSize: 11 }}>{zone.connection}</span>
                 </Popup>
               </CircleMarker>
             ))}
@@ -107,37 +126,6 @@ export default function Geopolitics() {
               {z.name}
             </span>
           ))}
-        </div>
-      </div>
-
-      {/* Section 3: Timeline */}
-      <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-        <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-4">Key Events Timeline</h3>
-        <div className="relative">
-          {/* Horizontal line */}
-          <div className="absolute top-4 left-0 right-0 h-[2px] bg-[#E5E7EB]" />
-
-          <div className="flex overflow-x-auto gap-0 pb-4">
-            {timelineEvents.map((event, i) => (
-              <div key={i} className="flex flex-col items-center min-w-[160px] px-2 relative">
-                {/* Dot on the line */}
-                <div className={`w-3 h-3 rounded-full border-2 z-10 ${
-                  event.date === 'Ongoing'
-                    ? 'bg-[#DC2626] border-[#DC2626] animate-pulse-dot'
-                    : event.date.includes('Feb 28')
-                      ? 'bg-[#DC2626] border-[#DC2626]'
-                      : 'bg-white border-[#6B7280]'
-                }`} />
-                <div className="mt-3 text-center">
-                  <div className="text-[10px] font-mono font-semibold text-[#6B7280]">{event.date}</div>
-                  <div className="text-[11px] font-semibold text-[#111827] mt-1 leading-tight">{event.title}</div>
-                  {event.description && (
-                    <div className="text-[10px] text-[#9CA3AF] mt-0.5 leading-snug">{event.description}</div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

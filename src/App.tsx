@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import BreakingTicker from './components/BreakingTicker'
-import Footer from './components/Footer'
+import Navbar from './components/layout/Navbar'
+import BottomTicker from './components/layout/BottomTicker'
+import Footer from './components/layout/Footer'
 import LiveFeed from './pages/LiveFeed'
 import Dashboard from './pages/Dashboard'
 import SocialPulse from './pages/SocialPulse'
@@ -11,7 +11,7 @@ import Sources from './pages/Sources'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <Navbar />
       <Routes>
         <Route path="/" element={<LiveFeed />} />
@@ -22,7 +22,7 @@ export default function App() {
         <Route path="/sources" element={<Sources />} />
       </Routes>
       <Footer />
-      <BreakingTicker />
+      <BottomTicker />
     </div>
   )
 }

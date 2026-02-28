@@ -3,25 +3,31 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --color-page: #FAFAFA;
+  --color-surface: #F8F9FA;
   --color-card: #FFFFFF;
   --color-border: #E5E7EB;
-  --color-primary: #111827;
-  --color-secondary: #6B7280;
-  --color-muted: #9CA3AF;
-  --color-red: #DC2626;
-  --color-amber: #D97706;
-  --color-blue: #2563EB;
-  --color-green: #16A34A;
-  --color-purple: #7C3AED;
-  --color-teal: #0D9488;
+  --color-border-hover: #D1D5DB;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+  --color-text-faint: #D1D5DB;
+  --color-danger: #DC2626;
+  --color-danger-bg: #FEF2F2;
+  --color-warning: #D97706;
+  --color-warning-bg: #FFFBEB;
+  --color-info: #2563EB;
+  --color-success: #16A34A;
+  --color-osint: #7C3AED;
+  --color-independent: #0D9488;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 html, body, #root {
   margin: 0;
   padding: 0;
-  background: var(--color-page);
-  color: var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
 }
@@ -30,6 +36,13 @@ html, body, #root {
   border-color: var(--color-border);
 }
 
+/* Custom scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+/* Animations */
 @keyframes ticker-scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -40,13 +53,18 @@ html, body, #root {
   50% { opacity: 0.3; }
 }
 
-@keyframes progress-bar {
+@keyframes progress-sweep {
   0% { width: 0%; }
   100% { width: 100%; }
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 .animate-ticker {
-  animation: ticker-scroll 30s linear infinite;
+  animation: ticker-scroll 60s linear infinite;
 }
 
 .animate-pulse-dot {
@@ -54,7 +72,13 @@ html, body, #root {
 }
 
 .animate-progress {
-  animation: progress-bar 60s linear infinite;
+  animation: progress-sweep 60s linear infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
 .line-clamp-2 {
@@ -64,8 +88,38 @@ html, body, #root {
   overflow: hidden;
 }
 
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .leaflet-container {
   width: 100%;
   height: 100%;
   border-radius: 6px;
+}
+
+/* Section header utility */
+.section-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--color-text-muted);
+}
+
+/* Card base */
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-border-hover);
 }

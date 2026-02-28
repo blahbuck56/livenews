@@ -1,4 +1,3 @@
-// Simple Jaccard similarity for title deduplication
 function tokenize(text: string): Set<string> {
   return new Set(
     text.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2)
@@ -22,14 +21,12 @@ export function deduplicateArticles<T extends { title: string }>(
   for (const article of articles) {
     const tokens = tokenize(article.title);
     let isDuplicate = false;
-
     for (const cached of tokenCache) {
       if (jaccard(tokens, cached) > threshold) {
         isDuplicate = true;
         break;
       }
     }
-
     if (!isDuplicate) {
       result.push(article);
       tokenCache.push(tokens);

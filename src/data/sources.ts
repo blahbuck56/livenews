@@ -1,113 +1,115 @@
-import type { SourceInfo } from '../types';
+export interface Source {
+  id: string;
+  name: string;
+  url: string;
+  category: 'wire' | 'liveblog' | 'regional' | 'independent' | 'video' | 'osint' | 'state' | 'analysis' | 'social';
+  bias: 'neutral' | 'western' | 'regional' | 'state' | 'osint' | 'independent' | 'israeli' | 'opposition';
+  type: 'website' | 'liveblog' | 'youtube' | 'twitter' | 'osint-tool' | 'think-tank' | 'reddit' | 'telegram';
+  status: 'live' | 'active' | 'intermittent';
+  country: string;
+  description: string;
+  youtubeEmbedId?: string;
+  twitterHandle?: string;
+}
 
-export const allSources: SourceInfo[] = [
+export const allSources: Source[] = [
   // Wire Services
-  { name: 'Reuters', url: 'https://www.reuters.com', category: 'Wire Service', bias: 'Neutral', country: 'UK', type: 'Website', status: 'Live', description: 'International wire service, gold standard for factual breaking news' },
-  { name: 'Associated Press', url: 'https://apnews.com', category: 'Wire Service', bias: 'Neutral', country: 'USA', type: 'Website', status: 'Live', description: 'Non-profit wire service, widely cited, minimal editorial bias' },
-  { name: 'AFP', url: 'https://www.afp.com', category: 'Wire Service', bias: 'Neutral', country: 'France', type: 'Website', status: 'Live', description: 'French wire service, strong Middle East bureau coverage' },
+  { id: 'reuters', name: 'Reuters', url: 'https://www.reuters.com', category: 'wire', bias: 'neutral', type: 'website', status: 'live', country: 'UK', description: 'International wire service, gold standard for factual breaking news' },
+  { id: 'ap', name: 'Associated Press', url: 'https://apnews.com', category: 'wire', bias: 'neutral', type: 'website', status: 'live', country: 'USA', description: 'Non-profit wire service, widely cited, minimal editorial bias' },
+  { id: 'afp', name: 'AFP', url: 'https://www.afp.com', category: 'wire', bias: 'neutral', type: 'website', status: 'live', country: 'France', description: 'French wire service, strong Middle East bureau coverage' },
 
   // Live Blogs
-  { name: 'Al Jazeera Live Blog', url: 'https://www.aljazeera.com', category: 'Live Blog', bias: 'Regional', country: 'Qatar', type: 'Live Blog', status: 'Live', description: 'Qatar-funded, extensive on-ground correspondents in the region' },
-  { name: 'BBC Live Blog', url: 'https://www.bbc.com/news', category: 'Live Blog', bias: 'Western', country: 'UK', type: 'Live Blog', status: 'Live', description: 'British public broadcaster, generally balanced western perspective' },
-  { name: 'CNN Live Updates', url: 'https://www.cnn.com', category: 'Live Blog', bias: 'Western', country: 'USA', type: 'Live Blog', status: 'Live', description: 'US cable news, strong Pentagon and State Dept sources' },
-  { name: 'NBC News', url: 'https://www.nbcnews.com', category: 'Live Blog', bias: 'Western', country: 'USA', type: 'Live Blog', status: 'Active', description: 'US broadcast network, strong investigative reporting' },
-  { name: 'CBS News', url: 'https://www.cbsnews.com', category: 'Live Blog', bias: 'Western', country: 'USA', type: 'Live Blog', status: 'Active', description: 'US broadcast network news division' },
-  { name: 'The Guardian', url: 'https://www.theguardian.com', category: 'Live Blog', bias: 'Western', country: 'UK', type: 'Live Blog', status: 'Live', description: 'British broadsheet, progressive editorial stance' },
-  { name: 'The New Arab', url: 'https://www.newarab.com', category: 'Live Blog', bias: 'Regional', country: 'UK/Qatar', type: 'Live Blog', status: 'Active', description: 'Pan-Arab news outlet based in London' },
-  { name: 'Washington Post', url: 'https://www.washingtonpost.com', category: 'Live Blog', bias: 'Western', country: 'USA', type: 'Live Blog', status: 'Live', description: 'US broadsheet, strong national security reporting' },
-  { name: 'New York Times', url: 'https://www.nytimes.com', category: 'Live Blog', bias: 'Western', country: 'USA', type: 'Live Blog', status: 'Live', description: 'US paper of record, extensive foreign correspondent network' },
+  { id: 'aje-blog', name: 'Al Jazeera Live Blog', url: 'https://www.aljazeera.com', category: 'liveblog', bias: 'regional', type: 'liveblog', status: 'live', country: 'Qatar', description: 'Qatar-funded, extensive on-ground correspondents' },
+  { id: 'bbc-blog', name: 'BBC Live Blog', url: 'https://www.bbc.com/news', category: 'liveblog', bias: 'neutral', type: 'liveblog', status: 'live', country: 'UK', description: 'British public broadcaster, generally balanced' },
+  { id: 'cnn-blog', name: 'CNN Live Updates', url: 'https://www.cnn.com', category: 'liveblog', bias: 'western', type: 'liveblog', status: 'live', country: 'USA', description: 'US cable news, strong Pentagon and State Dept sources' },
+  { id: 'nbc', name: 'NBC News', url: 'https://www.nbcnews.com', category: 'liveblog', bias: 'western', type: 'liveblog', status: 'active', country: 'USA', description: 'US broadcast network, strong investigative reporting' },
+  { id: 'cbs', name: 'CBS News', url: 'https://www.cbsnews.com', category: 'liveblog', bias: 'western', type: 'liveblog', status: 'active', country: 'USA', description: 'US broadcast network news division' },
+  { id: 'guardian', name: 'The Guardian', url: 'https://www.theguardian.com', category: 'liveblog', bias: 'western', type: 'liveblog', status: 'live', country: 'UK', description: 'British broadsheet, progressive editorial stance' },
+  { id: 'newarab', name: 'The New Arab', url: 'https://www.newarab.com', category: 'liveblog', bias: 'regional', type: 'liveblog', status: 'active', country: 'UK/Qatar', description: 'Pan-Arab news outlet based in London' },
+  { id: 'wapo', name: 'Washington Post', url: 'https://www.washingtonpost.com', category: 'liveblog', bias: 'western', type: 'liveblog', status: 'live', country: 'USA', description: 'US broadsheet, strong national security reporting' },
+  { id: 'nyt', name: 'New York Times', url: 'https://www.nytimes.com', category: 'liveblog', bias: 'western', type: 'liveblog', status: 'live', country: 'USA', description: 'US paper of record, extensive foreign correspondent network' },
+  { id: 'toi', name: 'Times of Israel', url: 'https://www.timesofisrael.com', category: 'liveblog', bias: 'israeli', type: 'liveblog', status: 'live', country: 'Israel', description: 'Israeli news site, centrist Israeli perspective' },
 
-  // Middle East & Regional
-  { name: 'Al Jazeera', url: 'https://www.aljazeera.com', category: 'Middle East & Regional', bias: 'Regional', country: 'Qatar', type: 'Website', status: 'Live', description: 'Qatar state-funded, largest Arabic news network globally' },
-  { name: 'Middle East Eye', url: 'https://www.middleeasteye.net', category: 'Middle East & Regional', bias: 'Regional', country: 'UK', type: 'Website', status: 'Active', description: 'London-based, covers Middle East from regional perspective' },
-  { name: 'Arab News', url: 'https://www.arabnews.com', category: 'Middle East & Regional', bias: 'Regional', country: 'Saudi Arabia', type: 'Website', status: 'Active', description: 'Saudi-owned English-language daily' },
-  { name: 'Times of Israel', url: 'https://www.timesofisrael.com', category: 'Middle East & Regional', bias: 'Israeli', country: 'Israel', type: 'Website', status: 'Live', description: 'Israeli news site, English language, centrist Israeli perspective' },
-  { name: 'Haaretz', url: 'https://www.haaretz.com', category: 'Middle East & Regional', bias: 'Israeli', country: 'Israel', type: 'Website', status: 'Active', description: 'Israeli broadsheet, left-leaning, critical of government' },
-  { name: 'The National', url: 'https://www.thenationalnews.com', category: 'Middle East & Regional', bias: 'Regional', country: 'UAE', type: 'Website', status: 'Active', description: 'Abu Dhabi state-owned English-language newspaper' },
-  { name: 'TRT World', url: 'https://www.trtworld.com', category: 'Middle East & Regional', bias: 'Regional', country: 'Turkey', type: 'Website', status: 'Active', description: 'Turkish state broadcaster, English-language international service' },
+  // Regional
+  { id: 'aje', name: 'Al Jazeera', url: 'https://www.aljazeera.com', category: 'regional', bias: 'regional', type: 'website', status: 'live', country: 'Qatar', description: 'Qatar state-funded, largest Arabic news network globally' },
+  { id: 'mee', name: 'Middle East Eye', url: 'https://www.middleeasteye.net', category: 'regional', bias: 'independent', type: 'website', status: 'active', country: 'UK', description: 'London-based, regional perspective' },
+  { id: 'arabnews', name: 'Arab News', url: 'https://www.arabnews.com', category: 'regional', bias: 'regional', type: 'website', status: 'active', country: 'Saudi Arabia', description: 'Saudi-owned English-language daily' },
+  { id: 'haaretz', name: 'Haaretz', url: 'https://www.haaretz.com', category: 'regional', bias: 'israeli', type: 'website', status: 'active', country: 'Israel', description: 'Israeli broadsheet, left-leaning, critical of government' },
+  { id: 'national', name: 'The National', url: 'https://www.thenationalnews.com', category: 'regional', bias: 'regional', type: 'website', status: 'active', country: 'UAE', description: 'Abu Dhabi state-owned English-language newspaper' },
+  { id: 'trt', name: 'TRT World', url: 'https://www.trtworld.com', category: 'regional', bias: 'regional', type: 'website', status: 'active', country: 'Turkey', description: 'Turkish state broadcaster, English-language international service' },
 
-  // Independent & Diaspora
-  { name: 'Iran International', url: 'https://www.iranintl.com', category: 'Independent & Diaspora', bias: 'Opposition', country: 'UK', type: 'Website', status: 'Live', description: 'London-based Persian/English, critical of Iranian regime' },
-  { name: 'IranWire', url: 'https://iranwire.com', category: 'Independent & Diaspora', bias: 'Opposition', country: 'UK', type: 'Website', status: 'Active', description: 'Independent journalism platform covering Iran' },
-  { name: '+972 Magazine', url: 'https://www.972mag.com', category: 'Independent & Diaspora', bias: 'Independent', country: 'Israel/Palestine', type: 'Website', status: 'Active', description: 'Independent Israeli-Palestinian journalism' },
-  { name: 'The Intercept', url: 'https://theintercept.com', category: 'Independent & Diaspora', bias: 'Independent', country: 'USA', type: 'Website', status: 'Active', description: 'Investigative journalism, strong national security reporting' },
-  { name: 'Mondoweiss', url: 'https://mondoweiss.net', category: 'Independent & Diaspora', bias: 'Independent', country: 'USA', type: 'Website', status: 'Active', description: 'Independent news on Palestine/Israel and US policy' },
-  { name: 'CNBC', url: 'https://www.cnbc.com', category: 'Independent & Diaspora', bias: 'Western', country: 'USA', type: 'Website', status: 'Active', description: 'Business news, covers market impact of geopolitics' },
-  { name: 'Fortune', url: 'https://fortune.com', category: 'Independent & Diaspora', bias: 'Western', country: 'USA', type: 'Website', status: 'Active', description: 'Business magazine, economic and corporate perspective' },
+  // Independent
+  { id: 'iranintl', name: 'Iran International', url: 'https://www.iranintl.com', category: 'independent', bias: 'opposition', type: 'website', status: 'live', country: 'UK', description: 'London-based, critical of Iranian regime, Saudi-linked funding' },
+  { id: 'iranwire', name: 'IranWire', url: 'https://iranwire.com', category: 'independent', bias: 'opposition', type: 'website', status: 'active', country: 'UK', description: 'Independent journalism platform covering Iran' },
+  { id: '972mag', name: '+972 Magazine', url: 'https://www.972mag.com', category: 'independent', bias: 'independent', type: 'website', status: 'active', country: 'Israel/Palestine', description: 'Independent Israeli-Palestinian journalism' },
+  { id: 'intercept', name: 'The Intercept', url: 'https://theintercept.com', category: 'independent', bias: 'independent', type: 'website', status: 'active', country: 'USA', description: 'Investigative journalism, strong national security reporting' },
+  { id: 'mondoweiss', name: 'Mondoweiss', url: 'https://mondoweiss.net', category: 'independent', bias: 'independent', type: 'website', status: 'active', country: 'USA', description: 'Independent news on Palestine/Israel and US policy' },
+  { id: 'cnbc', name: 'CNBC', url: 'https://www.cnbc.com', category: 'independent', bias: 'western', type: 'website', status: 'active', country: 'USA', description: 'Business news, covers market impact of geopolitics' },
+  { id: 'fortune', name: 'Fortune', url: 'https://fortune.com', category: 'independent', bias: 'western', type: 'website', status: 'active', country: 'USA', description: 'Business magazine, economic and corporate perspective' },
 
-  // YouTube Live Streams
-  { name: 'Al Jazeera English (YouTube)', url: 'https://www.youtube.com/c/AlJazeeraEnglish', category: 'YouTube Live', bias: 'Regional', country: 'Qatar', type: 'YouTube', status: 'Live', description: 'Qatar-funded, correspondent on ground in Tehran' },
-  { name: 'Sky News (YouTube)', url: 'https://www.youtube.com/c/skynews', category: 'YouTube Live', bias: 'Western', country: 'UK', type: 'YouTube', status: 'Live', description: 'British 24-hour news, strong Middle East desk' },
-  { name: 'France 24 (YouTube)', url: 'https://www.youtube.com/c/FRANCE24English', category: 'YouTube Live', bias: 'Western', country: 'France', type: 'YouTube', status: 'Live', description: 'French state international news, multi-perspective' },
-  { name: 'DW News (YouTube)', url: 'https://www.youtube.com/c/DWNews', category: 'YouTube Live', bias: 'Western', country: 'Germany', type: 'YouTube', status: 'Live', description: 'German state international broadcaster' },
-  { name: 'Iran International TV (YouTube)', url: 'https://www.youtube.com/c/IranIntlTV', category: 'YouTube Live', bias: 'Opposition', country: 'UK', type: 'YouTube', status: 'Live', description: 'London-based, Persian-language opposition broadcast' },
-  { name: 'BBC News 24 (YouTube)', url: 'https://www.youtube.com/c/BBCNews', category: 'YouTube Live', bias: 'Western', country: 'UK', type: 'YouTube', status: 'Live', description: 'British public broadcaster 24-hour news' },
-  { name: 'ABC News (YouTube)', url: 'https://www.youtube.com/c/ABCNews', category: 'YouTube Live', bias: 'Western', country: 'USA', type: 'YouTube', status: 'Live', description: 'US broadcast network news' },
-  { name: 'WION India (YouTube)', url: 'https://www.youtube.com/c/WIONews', category: 'YouTube Live', bias: 'Regional', country: 'India', type: 'YouTube', status: 'Live', description: 'Indian international news, non-western perspective' },
-  { name: 'TRT World (YouTube)', url: 'https://www.youtube.com/c/TRTWorld', category: 'YouTube Live', bias: 'Regional', country: 'Turkey', type: 'YouTube', status: 'Active', description: 'Turkish state international broadcaster' },
-  { name: 'i24NEWS Israel (YouTube)', url: 'https://www.youtube.com/c/i24NEWS', category: 'YouTube Live', bias: 'Israeli', country: 'Israel', type: 'YouTube', status: 'Live', description: 'Israeli 24-hour news, strong security analysis' },
-  { name: 'Press TV Iran (YouTube)', url: 'https://www.youtube.com/c/PressTVIran', category: 'YouTube Live', bias: 'State', country: 'Iran', type: 'YouTube', status: 'Active', description: 'Iranian state English-language broadcaster' },
+  // YouTube Live
+  { id: 'yt-aje', name: 'Al Jazeera English', url: 'https://www.youtube.com/c/AlJazeeraEnglish', category: 'video', bias: 'regional', type: 'youtube', status: 'live', country: 'Qatar', description: 'On-ground Tehran correspondent, extensive live coverage', youtubeEmbedId: 'gCNeDWCI0vo' },
+  { id: 'yt-sky', name: 'Sky News', url: 'https://www.youtube.com/c/skynews', category: 'video', bias: 'western', type: 'youtube', status: 'live', country: 'UK', description: 'British, balanced breaking news coverage', youtubeEmbedId: '9Auq9mYxFEE' },
+  { id: 'yt-f24', name: 'France 24 English', url: 'https://www.youtube.com/c/FRANCE24English', category: 'video', bias: 'neutral', type: 'youtube', status: 'live', country: 'France', description: 'French public broadcaster, European perspective', youtubeEmbedId: 'Ap-UM1O9RBk' },
+  { id: 'yt-dw', name: 'DW News', url: 'https://www.youtube.com/c/DWNews', category: 'video', bias: 'neutral', type: 'youtube', status: 'live', country: 'Germany', description: 'German public broadcaster, analytical', youtubeEmbedId: 'GE_SfNVNyqk' },
+  { id: 'yt-iranintl', name: 'Iran International TV', url: 'https://www.youtube.com/c/IranIntlTV', category: 'video', bias: 'opposition', type: 'youtube', status: 'live', country: 'UK', description: 'London-based diaspora channel, sources inside Iran', youtubeEmbedId: '5LBjODFbMVo' },
+  { id: 'yt-bbc', name: 'BBC News', url: 'https://www.youtube.com/c/BBCNews', category: 'video', bias: 'neutral', type: 'youtube', status: 'live', country: 'UK', description: 'UK public broadcaster, global standard', youtubeEmbedId: 'drOQ9kGjFOk' },
+  { id: 'yt-abc', name: 'ABC News', url: 'https://www.youtube.com/c/ABCNews', category: 'video', bias: 'western', type: 'youtube', status: 'live', country: 'USA', description: 'U.S. network, White House pool access', youtubeEmbedId: 'w_Ma8oQLmSM' },
+  { id: 'yt-wion', name: 'WION', url: 'https://www.youtube.com/c/WIONews', category: 'video', bias: 'neutral', type: 'youtube', status: 'live', country: 'India', description: 'Indian perspective, non-aligned viewpoint', youtubeEmbedId: '_dL0CZWB4bE' },
+  { id: 'yt-trt', name: 'TRT World', url: 'https://www.youtube.com/c/TRTWorld', category: 'video', bias: 'regional', type: 'youtube', status: 'active', country: 'Turkey', description: "Turkish state broadcaster, Ankara's perspective", youtubeEmbedId: 'CV5Fooi8YJA' },
+  { id: 'yt-i24', name: 'i24NEWS', url: 'https://www.youtube.com/c/i24NEWS', category: 'video', bias: 'israeli', type: 'youtube', status: 'live', country: 'Israel', description: 'Israeli English-language, live from Tel Aviv', youtubeEmbedId: 'F-POY4Q0QSI' },
+  { id: 'yt-presstv', name: 'Press TV', url: 'https://www.youtube.com/c/PressTVIran', category: 'video', bias: 'state', type: 'youtube', status: 'active', country: 'Iran', description: 'Iranian state English-language broadcaster', youtubeEmbedId: 'cHELsaO4bKo' },
 
-  // OSINT & Tools
-  { name: 'Liveuamap Iran', url: 'https://iran.liveuamap.com', category: 'OSINT & Tools', bias: 'OSINT', country: 'Ukraine', type: 'OSINT Tool', status: 'Live', description: 'Crowdsourced conflict map with real-time incident tracking' },
-  { name: 'Iran Monitor', url: 'https://iranmonitor.org', category: 'OSINT & Tools', bias: 'OSINT', country: 'International', type: 'OSINT Tool', status: 'Active', description: 'OSINT aggregation focused on Iran military activity' },
-  { name: 'NetBlocks', url: 'https://netblocks.org', category: 'OSINT & Tools', bias: 'OSINT', country: 'UK', type: 'OSINT Tool', status: 'Live', description: 'Internet censorship and connectivity monitoring' },
-  { name: 'NASA FIRMS', url: 'https://firms.modaps.eosdis.nasa.gov', category: 'OSINT & Tools', bias: 'OSINT', country: 'USA', type: 'OSINT Tool', status: 'Live', description: 'Satellite fire/hotspot detection, can indicate strikes' },
-  { name: 'Flightradar24', url: 'https://www.flightradar24.com', category: 'OSINT & Tools', bias: 'OSINT', country: 'Sweden', type: 'OSINT Tool', status: 'Live', description: 'Flight tracking, useful for monitoring airspace closures' },
-  { name: 'MarineTraffic', url: 'https://www.marinetraffic.com', category: 'OSINT & Tools', bias: 'OSINT', country: 'Greece', type: 'OSINT Tool', status: 'Live', description: 'Ship tracking for Strait of Hormuz naval activity' },
-  { name: 'ACLED', url: 'https://acleddata.com', category: 'OSINT & Tools', bias: 'OSINT', country: 'USA', type: 'OSINT Tool', status: 'Active', description: 'Armed conflict location and event data project' },
-  { name: 'Bellingcat', url: 'https://www.bellingcat.com', category: 'OSINT & Tools', bias: 'OSINT', country: 'Netherlands', type: 'OSINT Tool', status: 'Active', description: 'Investigative OSINT journalism collective' },
+  // OSINT
+  { id: 'liveuamap', name: 'Liveuamap Iran', url: 'https://iran.liveuamap.com', category: 'osint', bias: 'osint', type: 'osint-tool', status: 'live', country: 'Ukraine', description: 'Crowdsourced conflict map with real-time incident tracking' },
+  { id: 'iranmonitor', name: 'Iran Monitor', url: 'https://iranmonitor.org', category: 'osint', bias: 'osint', type: 'osint-tool', status: 'active', country: 'International', description: 'OSINT aggregation focused on Iran military activity' },
+  { id: 'netblocks', name: 'NetBlocks', url: 'https://netblocks.org', category: 'osint', bias: 'osint', type: 'osint-tool', status: 'live', country: 'UK', description: 'Internet censorship and connectivity monitoring' },
+  { id: 'firms', name: 'NASA FIRMS', url: 'https://firms.modaps.eosdis.nasa.gov', category: 'osint', bias: 'osint', type: 'osint-tool', status: 'live', country: 'USA', description: 'Satellite fire/hotspot detection, can indicate strikes' },
+  { id: 'flightradar', name: 'Flightradar24', url: 'https://www.flightradar24.com', category: 'osint', bias: 'osint', type: 'osint-tool', status: 'live', country: 'Sweden', description: 'Flight tracking, monitoring airspace closures' },
+  { id: 'marinetraffic', name: 'MarineTraffic', url: 'https://www.marinetraffic.com', category: 'osint', bias: 'osint', type: 'osint-tool', status: 'live', country: 'Greece', description: 'Ship tracking for Strait of Hormuz naval activity' },
+  { id: 'acled', name: 'ACLED', url: 'https://acleddata.com', category: 'osint', bias: 'osint', type: 'osint-tool', status: 'active', country: 'USA', description: 'Armed conflict location and event data project' },
+  { id: 'bellingcat', name: 'Bellingcat', url: 'https://www.bellingcat.com', category: 'osint', bias: 'osint', type: 'osint-tool', status: 'active', country: 'Netherlands', description: 'Investigative OSINT journalism collective' },
 
-  // State & Government Media
-  { name: 'IRNA', url: 'https://en.irna.ir', category: 'State Media', bias: 'State', country: 'Iran', type: 'Website', status: 'Active', description: 'Islamic Republic News Agency, official Iranian state wire' },
-  { name: 'Press TV', url: 'https://www.presstv.ir', category: 'State Media', bias: 'State', country: 'Iran', type: 'Website', status: 'Active', description: 'Iranian state English-language 24hr news network' },
-  { name: 'Fars News', url: 'https://www.farsnews.ir/en', category: 'State Media', bias: 'State', country: 'Iran', type: 'Website', status: 'Active', description: 'Semi-official, linked to IRGC, Iranian hardline perspective' },
-  { name: 'Tasnim News', url: 'https://www.tasnimnews.com/en', category: 'State Media', bias: 'State', country: 'Iran', type: 'Website', status: 'Active', description: 'IRGC-affiliated, primary source for Iranian military statements' },
-  { name: 'IDF Official', url: 'https://www.idf.il', category: 'State Media', bias: 'Israeli', country: 'Israel', type: 'Website', status: 'Live', description: 'Israel Defense Forces official communications' },
+  // State Media
+  { id: 'irna', name: 'IRNA', url: 'https://en.irna.ir', category: 'state', bias: 'state', type: 'website', status: 'active', country: 'Iran', description: 'Islamic Republic News Agency, official Iranian state wire' },
+  { id: 'presstv', name: 'Press TV', url: 'https://www.presstv.ir', category: 'state', bias: 'state', type: 'website', status: 'active', country: 'Iran', description: 'Iranian state English-language 24hr news network' },
+  { id: 'fars', name: 'Fars News', url: 'https://www.farsnews.ir/en', category: 'state', bias: 'state', type: 'website', status: 'active', country: 'Iran', description: 'Semi-official, linked to IRGC, hardline perspective' },
+  { id: 'tasnim', name: 'Tasnim News', url: 'https://www.tasnimnews.com/en', category: 'state', bias: 'state', type: 'website', status: 'active', country: 'Iran', description: 'IRGC-affiliated, primary for military statements' },
+  { id: 'idf', name: 'IDF Official', url: 'https://www.idf.il', category: 'state', bias: 'israeli', type: 'website', status: 'live', country: 'Israel', description: 'Israel Defense Forces official communications' },
 
-  // Think Tanks & Analysis
-  { name: 'ISW', url: 'https://www.understandingwar.org', category: 'Think Tank', bias: 'Western', country: 'USA', type: 'Think Tank', status: 'Active', description: 'Institute for the Study of War, detailed battlefield assessments' },
-  { name: 'International Crisis Group', url: 'https://www.crisisgroup.org', category: 'Think Tank', bias: 'Neutral', country: 'Belgium', type: 'Think Tank', status: 'Active', description: 'Independent conflict prevention and resolution analysis' },
-  { name: 'Council on Foreign Relations', url: 'https://www.cfr.org', category: 'Think Tank', bias: 'Western', country: 'USA', type: 'Think Tank', status: 'Active', description: 'US foreign policy think tank, establishment perspective' },
-  { name: 'Bellingcat (Analysis)', url: 'https://www.bellingcat.com', category: 'Think Tank', bias: 'OSINT', country: 'Netherlands', type: 'Think Tank', status: 'Active', description: 'Open source investigation and verification' },
-  { name: 'RUSI', url: 'https://www.rusi.org', category: 'Think Tank', bias: 'Western', country: 'UK', type: 'Think Tank', status: 'Active', description: 'Royal United Services Institute, UK defense and security' },
-  { name: 'Quincy Institute', url: 'https://quincyinst.org', category: 'Think Tank', bias: 'Independent', country: 'USA', type: 'Think Tank', status: 'Active', description: 'Advocates diplomatic engagement and restraint' },
-  { name: 'Atlantic Council', url: 'https://www.atlanticcouncil.org', category: 'Think Tank', bias: 'Western', country: 'USA', type: 'Think Tank', status: 'Active', description: 'Transatlantic policy think tank, strong Iran coverage' },
+  // Think Tanks
+  { id: 'isw', name: 'ISW', url: 'https://www.understandingwar.org', category: 'analysis', bias: 'western', type: 'think-tank', status: 'active', country: 'USA', description: 'Institute for the Study of War, battlefield assessments' },
+  { id: 'icg', name: 'Intl Crisis Group', url: 'https://www.crisisgroup.org', category: 'analysis', bias: 'neutral', type: 'think-tank', status: 'active', country: 'Belgium', description: 'Independent conflict prevention and resolution' },
+  { id: 'cfr', name: 'Council on Foreign Relations', url: 'https://www.cfr.org', category: 'analysis', bias: 'western', type: 'think-tank', status: 'active', country: 'USA', description: 'US foreign policy think tank, establishment perspective' },
+  { id: 'bellingcat-a', name: 'Bellingcat (Analysis)', url: 'https://www.bellingcat.com', category: 'analysis', bias: 'osint', type: 'think-tank', status: 'active', country: 'Netherlands', description: 'Open source investigation and verification' },
+  { id: 'rusi', name: 'RUSI', url: 'https://www.rusi.org', category: 'analysis', bias: 'western', type: 'think-tank', status: 'active', country: 'UK', description: 'Royal United Services Institute, UK defense and security' },
+  { id: 'quincy', name: 'Quincy Institute', url: 'https://quincyinst.org', category: 'analysis', bias: 'independent', type: 'think-tank', status: 'active', country: 'USA', description: 'Advocates diplomatic engagement and restraint' },
+  { id: 'atlantic', name: 'Atlantic Council', url: 'https://www.atlanticcouncil.org', category: 'analysis', bias: 'western', type: 'think-tank', status: 'active', country: 'USA', description: 'Transatlantic policy think tank, strong Iran coverage' },
 
-  // Twitter/X Accounts
-  { name: '@Reuters', url: 'https://twitter.com/Reuters', category: 'Twitter/X', bias: 'Neutral', country: 'UK', type: 'Twitter', status: 'Live', description: 'Reuters breaking news', twitterHandle: 'Reuters' },
-  { name: '@AP', url: 'https://twitter.com/AP', category: 'Twitter/X', bias: 'Neutral', country: 'USA', type: 'Twitter', status: 'Live', description: 'Associated Press breaking news', twitterHandle: 'AP' },
-  { name: '@AJEnglish', url: 'https://twitter.com/AJEnglish', category: 'Twitter/X', bias: 'Regional', country: 'Qatar', type: 'Twitter', status: 'Live', description: 'Al Jazeera English official', twitterHandle: 'AJEnglish' },
-  { name: '@BBCBreaking', url: 'https://twitter.com/BBCBreaking', category: 'Twitter/X', bias: 'Western', country: 'UK', type: 'Twitter', status: 'Live', description: 'BBC Breaking News', twitterHandle: 'BBCBreaking' },
-  { name: '@IranIntl_En', url: 'https://twitter.com/IranIntl_En', category: 'Twitter/X', bias: 'Opposition', country: 'UK', type: 'Twitter', status: 'Live', description: 'Iran International English', twitterHandle: 'IranIntl_En' },
-  { name: '@sentdefender', url: 'https://twitter.com/sentdefender', category: 'Twitter/X', bias: 'OSINT', country: 'USA', type: 'Twitter', status: 'Live', description: 'OSINT Defender, real-time conflict updates', twitterHandle: 'sentdefender' },
-  { name: '@OSINTWarfare', url: 'https://twitter.com/OSINTWarfare', category: 'Twitter/X', bias: 'OSINT', country: 'International', type: 'Twitter', status: 'Active', description: 'OSINT warfare tracking account', twitterHandle: 'OSINTWarfare' },
-  { name: '@Osint613', url: 'https://twitter.com/Osint613', category: 'Twitter/X', bias: 'OSINT', country: 'Israel', type: 'Twitter', status: 'Active', description: 'Israel-focused OSINT tracker', twitterHandle: 'Osint613' },
-  { name: '@netblocks', url: 'https://twitter.com/netblocks', category: 'Twitter/X', bias: 'OSINT', country: 'UK', type: 'Twitter', status: 'Live', description: 'Internet connectivity monitor', twitterHandle: 'netblocks' },
-  { name: '@TheStudyofWar', url: 'https://twitter.com/TheStudyofWar', category: 'Twitter/X', bias: 'Western', country: 'USA', type: 'Twitter', status: 'Active', description: 'Institute for the Study of War official', twitterHandle: 'TheStudyofWar' },
-  { name: '@Joyce_Karam', url: 'https://twitter.com/Joyce_Karam', category: 'Twitter/X', bias: 'Independent', country: 'USA/Lebanon', type: 'Twitter', status: 'Active', description: 'Journalist covering Middle East policy', twitterHandle: 'Joyce_Karam' },
-  { name: '@BarakRavid', url: 'https://twitter.com/BarakRavid', category: 'Twitter/X', bias: 'Israeli', country: 'Israel', type: 'Twitter', status: 'Active', description: 'Axios reporter, Israeli diplomatic sources', twitterHandle: 'BarakRavid' },
-  { name: '@NatashaBertrand', url: 'https://twitter.com/NatashaBertrand', category: 'Twitter/X', bias: 'Western', country: 'USA', type: 'Twitter', status: 'Active', description: 'CNN Pentagon/Intelligence reporter', twitterHandle: 'NatashaBertrand' },
-  { name: '@JackDetsch', url: 'https://twitter.com/JackDetsch', category: 'Twitter/X', bias: 'Western', country: 'USA', type: 'Twitter', status: 'Active', description: 'Foreign Policy Pentagon reporter', twitterHandle: 'JackDetsch' },
-  { name: '@Ali_Vaez', url: 'https://twitter.com/Ali_Vaez', category: 'Twitter/X', bias: 'Independent', country: 'USA/Iran', type: 'Twitter', status: 'Active', description: 'International Crisis Group Iran director', twitterHandle: 'Ali_Vaez' },
-  { name: '@AzadehMoaveni', url: 'https://twitter.com/AzadehMoaveni', category: 'Twitter/X', bias: 'Independent', country: 'UK/Iran', type: 'Twitter', status: 'Active', description: 'Author and journalist covering Iran', twitterHandle: 'AzadehMoaveni' },
-  { name: '@IranWire', url: 'https://twitter.com/IranWire', category: 'Twitter/X', bias: 'Opposition', country: 'UK', type: 'Twitter', status: 'Active', description: 'IranWire independent journalism', twitterHandle: 'IranWire' },
+  // Twitter
+  { id: 'tw-reuters', name: '@Reuters', url: 'https://twitter.com/Reuters', category: 'social', bias: 'neutral', type: 'twitter', status: 'live', country: 'UK', description: 'Reuters breaking news', twitterHandle: 'Reuters' },
+  { id: 'tw-ap', name: '@AP', url: 'https://twitter.com/AP', category: 'social', bias: 'neutral', type: 'twitter', status: 'live', country: 'USA', description: 'Associated Press breaking news', twitterHandle: 'AP' },
+  { id: 'tw-aje', name: '@AJEnglish', url: 'https://twitter.com/AJEnglish', category: 'social', bias: 'regional', type: 'twitter', status: 'live', country: 'Qatar', description: 'Al Jazeera English official', twitterHandle: 'AJEnglish' },
+  { id: 'tw-bbc', name: '@BBCBreaking', url: 'https://twitter.com/BBCBreaking', category: 'social', bias: 'neutral', type: 'twitter', status: 'live', country: 'UK', description: 'BBC Breaking News', twitterHandle: 'BBCBreaking' },
+  { id: 'tw-iranintl', name: '@IranIntl_En', url: 'https://twitter.com/IranIntl_En', category: 'social', bias: 'opposition', type: 'twitter', status: 'live', country: 'UK', description: 'Iran International English', twitterHandle: 'IranIntl_En' },
+  { id: 'tw-sentdef', name: '@sentdefender', url: 'https://twitter.com/sentdefender', category: 'social', bias: 'osint', type: 'twitter', status: 'live', country: 'USA', description: 'OSINT Defender, real-time conflict updates', twitterHandle: 'sentdefender' },
+  { id: 'tw-osintwar', name: '@OSINTWarfare', url: 'https://twitter.com/OSINTWarfare', category: 'social', bias: 'osint', type: 'twitter', status: 'active', country: 'International', description: 'OSINT warfare tracking', twitterHandle: 'OSINTWarfare' },
+  { id: 'tw-osint613', name: '@Osint613', url: 'https://twitter.com/Osint613', category: 'social', bias: 'osint', type: 'twitter', status: 'active', country: 'Israel', description: 'Israel-focused OSINT tracker', twitterHandle: 'Osint613' },
+  { id: 'tw-netblocks', name: '@netblocks', url: 'https://twitter.com/netblocks', category: 'social', bias: 'osint', type: 'twitter', status: 'live', country: 'UK', description: 'Internet connectivity monitor', twitterHandle: 'netblocks' },
+  { id: 'tw-isw', name: '@TheStudyofWar', url: 'https://twitter.com/TheStudyofWar', category: 'social', bias: 'western', type: 'twitter', status: 'active', country: 'USA', description: 'ISW official', twitterHandle: 'TheStudyofWar' },
+  { id: 'tw-karam', name: '@Joyce_Karam', url: 'https://twitter.com/Joyce_Karam', category: 'social', bias: 'independent', type: 'twitter', status: 'active', country: 'USA/Lebanon', description: 'Middle East policy journalist', twitterHandle: 'Joyce_Karam' },
+  { id: 'tw-ravid', name: '@BarakRavid', url: 'https://twitter.com/BarakRavid', category: 'social', bias: 'israeli', type: 'twitter', status: 'active', country: 'Israel', description: 'Axios, Israeli diplomatic sources', twitterHandle: 'BarakRavid' },
+  { id: 'tw-bertrand', name: '@NatashaBertrand', url: 'https://twitter.com/NatashaBertrand', category: 'social', bias: 'western', type: 'twitter', status: 'active', country: 'USA', description: 'CNN Pentagon/Intelligence reporter', twitterHandle: 'NatashaBertrand' },
+  { id: 'tw-detsch', name: '@JackDetsch', url: 'https://twitter.com/JackDetsch', category: 'social', bias: 'western', type: 'twitter', status: 'active', country: 'USA', description: 'Foreign Policy Pentagon reporter', twitterHandle: 'JackDetsch' },
+  { id: 'tw-vaez', name: '@Ali_Vaez', url: 'https://twitter.com/Ali_Vaez', category: 'social', bias: 'independent', type: 'twitter', status: 'active', country: 'USA/Iran', description: 'Crisis Group Iran director', twitterHandle: 'Ali_Vaez' },
+  { id: 'tw-moaveni', name: '@AzadehMoaveni', url: 'https://twitter.com/AzadehMoaveni', category: 'social', bias: 'independent', type: 'twitter', status: 'active', country: 'UK/Iran', description: 'Author covering Iran', twitterHandle: 'AzadehMoaveni' },
+  { id: 'tw-iranwire', name: '@IranWire', url: 'https://twitter.com/IranWire', category: 'social', bias: 'opposition', type: 'twitter', status: 'active', country: 'UK', description: 'IranWire independent journalism', twitterHandle: 'IranWire' },
+  { id: 'tw-amanpour', name: '@camanpour', url: 'https://twitter.com/camanpour', category: 'social', bias: 'western', type: 'twitter', status: 'active', country: 'USA/UK', description: 'CNN chief international anchor', twitterHandle: 'camanpour' },
 
-  // Subreddits
-  { name: 'r/iran', url: 'https://www.reddit.com/r/iran', category: 'Subreddit', bias: 'Independent', country: 'International', type: 'Subreddit', status: 'Active', description: 'Iran subreddit, diaspora-heavy, opposition-leaning' },
-  { name: 'r/worldnews', url: 'https://www.reddit.com/r/worldnews', category: 'Subreddit', bias: 'Neutral', country: 'International', type: 'Subreddit', status: 'Live', description: 'Major subreddit for international news aggregation' },
-  { name: 'r/geopolitics', url: 'https://www.reddit.com/r/geopolitics', category: 'Subreddit', bias: 'Neutral', country: 'International', type: 'Subreddit', status: 'Active', description: 'Academic-leaning geopolitical discussion' },
-  { name: 'r/OSINT', url: 'https://www.reddit.com/r/OSINT', category: 'Subreddit', bias: 'OSINT', country: 'International', type: 'Subreddit', status: 'Active', description: 'Open source intelligence community' },
-  { name: 'r/IranConflict', url: 'https://www.reddit.com/r/IranConflict', category: 'Subreddit', bias: 'Independent', country: 'International', type: 'Subreddit', status: 'Active', description: 'Dedicated subreddit for the Iran conflict' },
+  // Reddit
+  { id: 'r-iran', name: 'r/iran', url: 'https://www.reddit.com/r/iran', category: 'social', bias: 'independent', type: 'reddit', status: 'active', country: 'International', description: 'Iran subreddit, diaspora-heavy, opposition-leaning' },
+  { id: 'r-worldnews', name: 'r/worldnews', url: 'https://www.reddit.com/r/worldnews', category: 'social', bias: 'neutral', type: 'reddit', status: 'live', country: 'International', description: 'Major subreddit for international news aggregation' },
+  { id: 'r-geopolitics', name: 'r/geopolitics', url: 'https://www.reddit.com/r/geopolitics', category: 'social', bias: 'neutral', type: 'reddit', status: 'active', country: 'International', description: 'Academic-leaning geopolitical discussion' },
+  { id: 'r-osint', name: 'r/OSINT', url: 'https://www.reddit.com/r/OSINT', category: 'social', bias: 'osint', type: 'reddit', status: 'active', country: 'International', description: 'Open source intelligence community' },
+  { id: 'r-iranconflict', name: 'r/IranConflict', url: 'https://www.reddit.com/r/IranConflict', category: 'social', bias: 'independent', type: 'reddit', status: 'active', country: 'International', description: 'Dedicated subreddit for the Iran conflict' },
 ];
-
-export const biasColors: Record<string, string> = {
-  'Neutral': '#16A34A',
-  'Western': '#2563EB',
-  'Regional': '#D97706',
-  'State': '#DC2626',
-  'Independent': '#0D9488',
-  'OSINT': '#7C3AED',
-  'Israeli': '#2563EB',
-  'Opposition': '#0D9488',
-};

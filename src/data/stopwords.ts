@@ -1,0 +1,17 @@
+export const stopwords = new Set([
+  'iran', 'the', 'a', 'an', 'in', 'on', 'of', 'to', 'and', 'for', 'is',
+  'has', 'was', 'with', 'that', 'from', 'its', 'are', 'been', 'will',
+  'said', 'says', 'after', 'this', 'have', 'also', 'not', 'but', 'be',
+  'or', 'at', 'by', 'as', 'it', 'he', 'she', 'we', 'they', 'you',
+  'me', 'my', 'your', 'our', 'his', 'her', 'its', 'if', 'no', 'so',
+  'up', 'out', 'do', 'did', 'can', 'could', 'would', 'should', 'may',
+  'might', 'shall', 'than', 'too', 'very', 'just', 'about', 'over',
+  'into', 'more', 'most', 'some', 'any', 'such', 'only', 'other',
+  'new', 'now', 'get', 'got', 'like', 'make', 'many', 'much', 'each',
+  'both', 'few', 'all', 'how', 'what', 'when', 'where', 'which', 'who',
+  'whom', 'why', 'there', 'then', 'these', 'those', 'own', 'same',
+  'down', 'off', 'us', 'let', 'between', 'through', 'during', 'before',
+  'being', 'under', 'above', 'below', 'again', 'even', 'first', 'one',
+  'two', 'upon', 'while', 'news', 'report', 'reports', 'according',
+  'latest', 'update', 'updates', 'live', 'breaking',
+]);

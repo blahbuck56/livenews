@@ -1,41 +1,53 @@
 import { useState, useMemo } from 'react';
-import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useRedditFeed } from '../hooks/useReddit';
-import { useCombinedNews } from '../hooks/useNews';
-import { timeAgo } from '../utils/time';
-import { analyzeSentiment, getSentimentColor } from '../utils/sentiment';
-import { FeedSkeleton } from '../components/LoadingSkeleton';
-import ErrorState from '../components/ErrorState';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useRedditFeed } from '../hooks/useRedditFeed';
+import { useCombinedNews } from '../hooks/useGdeltArticles';
+import { analyzeSentiment, getSentimentColor } from '../lib/sentiment';
+import { FeedSkeleton } from '../components/common/LoadingSkeleton';
+import ErrorState from '../components/common/ErrorState';
+import SectionHeader from '../components/common/SectionHeader';
+import BiasTag from '../components/common/BiasTag';
 
 const twitterAccounts = [
-  { handle: 'Reuters', name: 'Reuters', bias: 'Neutral' },
-  { handle: 'AP', name: 'Associated Press', bias: 'Neutral' },
-  { handle: 'AJEnglish', name: 'Al Jazeera English', bias: 'Regional' },
-  { handle: 'BBCBreaking', name: 'BBC Breaking', bias: 'Western' },
-  { handle: 'IranIntl_En', name: 'Iran International', bias: 'Opposition' },
-  { handle: 'sentdefender', name: 'OSINT Defender', bias: 'OSINT' },
-  { handle: 'OSINTWarfare', name: 'OSINT Warfare', bias: 'OSINT' },
-  { handle: 'Osint613', name: 'Osint613', bias: 'OSINT' },
-  { handle: 'netblocks', name: 'NetBlocks', bias: 'OSINT' },
-  { handle: 'TheStudyofWar', name: 'ISW', bias: 'Western' },
-  { handle: 'Joyce_Karam', name: 'Joyce Karam', bias: 'Independent' },
-  { handle: 'BarakRavid', name: 'Barak Ravid', bias: 'Israeli' },
-  { handle: 'NatashaBertrand', name: 'Natasha Bertrand', bias: 'Western' },
-  { handle: 'JackDetsch', name: 'Jack Detsch', bias: 'Western' },
-  { handle: 'Ali_Vaez', name: 'Ali Vaez', bias: 'Independent' },
-  { handle: 'AzadehMoaveni', name: 'Azadeh Moaveni', bias: 'Independent' },
-  { handle: 'IranWire', name: 'IranWire', bias: 'Opposition' },
+  { handle: 'Reuters', name: 'Reuters', bias: 'neutral' },
+  { handle: 'AP', name: 'Associated Press', bias: 'neutral' },
+  { handle: 'AJEnglish', name: 'Al Jazeera English', bias: 'regional' },
+  { handle: 'BBCBreaking', name: 'BBC Breaking', bias: 'neutral' },
+  { handle: 'IranIntl_En', name: 'Iran International', bias: 'opposition' },
+  { handle: 'sentdefender', name: 'OSINT Defender', bias: 'osint' },
+  { handle: 'OSINTWarfare', name: 'OSINT Warfare', bias: 'osint' },
+  { handle: 'Osint613', name: 'Osint613', bias: 'osint' },
+  { handle: 'netblocks', name: 'NetBlocks', bias: 'osint' },
+  { handle: 'TheStudyofWar', name: 'ISW', bias: 'western' },
+  { handle: 'Joyce_Karam', name: 'Joyce Karam', bias: 'independent' },
+  { handle: 'BarakRavid', name: 'Barak Ravid', bias: 'israeli' },
+  { handle: 'NatashaBertrand', name: 'Natasha Bertrand', bias: 'western' },
+  { handle: 'JackDetsch', name: 'Jack Detsch', bias: 'western' },
+  { handle: 'Ali_Vaez', name: 'Ali Vaez', bias: 'independent' },
+  { handle: 'IranWire', name: 'IranWire', bias: 'opposition' },
 ];
 
 const telegramChannels = [
-  { name: 'Tasnim News Agency', description: 'IRGC-linked, primary for official Iranian military statements', url: 'https://t.me/tasaborednotpresent' },
-  { name: 'Fars News Agency', description: 'Semi-official Iranian news, hardline perspective', url: 'https://t.me/faborednotpresent' },
-  { name: 'Iran International', description: 'London-based, critical of Iranian regime', url: 'https://t.me/iraborednotpresent' },
-  { name: 'NetBlocks', description: 'Internet connectivity and censorship monitoring', url: 'https://t.me/neborednotpresent' },
-  { name: 'OSINT Aggregator', description: 'Open source intelligence collection channel', url: 'https://t.me/osaborednotpresent' },
+  { name: 'Tasnim News Agency', description: 'IRGC-linked, primary for official Iranian military statements', bias: 'state' },
+  { name: 'Fars News Agency', description: 'Semi-official Iranian news, hardline perspective', bias: 'state' },
+  { name: 'Iran International', description: 'London-based, critical of Iranian regime', bias: 'opposition' },
+  { name: 'NetBlocks', description: 'Internet connectivity and censorship monitoring', bias: 'osint' },
+  { name: 'OSINT Aggregators', description: 'Open source intelligence collection channels', bias: 'osint' },
 ];
 
+const subredditColors: Record<string, string> = { worldnews: 'bg-blue-50 text-blue-700', iran: 'bg-amber-50 text-amber-700', geopolitics: 'bg-teal-50 text-teal-700' };
+
 type Tab = 'twitter' | 'reddit' | 'telegram';
+
+function timeAgo(ts: number): string {
+  const s = Math.floor((Date.now() / 1000) - ts);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} hr ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
 export default function SocialPulse() {
   const [activeTab, setActiveTab] = useState<Tab>('reddit');
@@ -43,250 +55,177 @@ export default function SocialPulse() {
   const { articles } = useCombinedNews();
 
   const sentimentStats = useMemo(() => {
-    const scores = articles.map((a) => a.sentiment || analyzeSentiment(a.title));
-    if (scores.length === 0) return { avg: 0, positive: 0, negative: 0, neutral: 0 };
-
+    const scores = articles.map((a) => a.sentiment);
+    if (!scores.length) return { avg: 0, positive: 0, negative: 0, neutral: 0 };
     const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const positive = scores.filter((s) => s > 0.2).length;
-    const negative = scores.filter((s) => s < -0.2).length;
-    const neutral = scores.length - positive - negative;
-
-    return { avg, positive, negative, neutral };
+    return {
+      avg,
+      positive: scores.filter((s) => s > 0.5).length,
+      negative: scores.filter((s) => s < -0.5).length,
+      neutral: scores.filter((s) => s >= -0.5 && s <= 0.5).length,
+    };
   }, [articles]);
 
-  const topPositive = useMemo(() => {
-    return articles
-      .filter((a) => (a.sentiment || 0) > 0)
-      .sort((a, b) => (b.sentiment || 0) - (a.sentiment || 0))
-      .slice(0, 3);
-  }, [articles]);
-
-  const topNegative = useMemo(() => {
-    return articles
-      .filter((a) => (a.sentiment || 0) < 0)
-      .sort((a, b) => (a.sentiment || 0) - (b.sentiment || 0))
-      .slice(0, 3);
-  }, [articles]);
+  const topPositive = useMemo(() => [...articles].sort((a, b) => b.sentiment - a.sentiment).slice(0, 3), [articles]);
+  const topNegative = useMemo(() => [...articles].sort((a, b) => a.sentiment - b.sentiment).slice(0, 3), [articles]);
 
   const sentimentOverTime = useMemo(() => {
     const buckets: Record<string, { sum: number; count: number }> = {};
     for (const a of articles) {
       const hour = a.publishedAt.slice(0, 13);
       if (!buckets[hour]) buckets[hour] = { sum: 0, count: 0 };
-      buckets[hour].sum += a.sentiment || 0;
+      buckets[hour].sum += a.sentiment;
       buckets[hour].count++;
     }
-    return Object.entries(buckets)
-      .map(([hour, data]) => ({ hour: hour.slice(11, 13) + ':00', sentiment: data.sum / data.count }))
-      .slice(-24);
+    return Object.entries(buckets).map(([h, d]) => ({ hour: h.slice(11, 13) + ':00', sentiment: +(d.sum / d.count).toFixed(2) })).slice(-24);
   }, [articles]);
 
-  const pieData = [
-    { name: 'Negative', value: sentimentStats.negative, color: '#DC2626' },
-    { name: 'Neutral', value: sentimentStats.neutral, color: '#D97706' },
-    { name: 'Positive', value: sentimentStats.positive, color: '#16A34A' },
-  ];
+  // Gauge calculations
+  const gaugeValue = Math.round(sentimentStats.avg * 100);
+  const gaugeAngle = 180 * ((gaugeValue + 100) / 200); // map -100..100 to 0..180 degrees
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4">
-      <h1 className="text-lg font-bold text-[#111827] mb-4">Social Pulse</h1>
+    <div className="max-w-[1800px] mx-auto px-4 py-4">
+      <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px', marginBottom: '16px' }}>Social Pulse</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Left Column: Social Feed (60%) */}
+        {/* Left: Social Feed */}
         <div className="lg:col-span-3">
-          {/* Tabs */}
-          <div className="flex border-b border-[#E5E7EB] mb-4">
+          <div className="flex border-b mb-4">
             {(['twitter', 'reddit', 'telegram'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-xs font-medium border-b-2 bg-transparent cursor-pointer ${
-                  activeTab === tab
-                    ? 'border-[#111827] text-[#111827]'
-                    : 'border-transparent text-[#6B7280] hover:text-[#111827]'
-                }`}
-              >
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-[13px] font-medium border-b-2 bg-transparent cursor-pointer transition-colors ${activeTab === tab ? 'border-[#DC2626] text-[#111827]' : 'border-transparent text-[#6B7280] hover:text-[#111827]'}`}>
                 {tab === 'twitter' ? 'Twitter/X' : tab === 'reddit' ? 'Reddit' : 'Telegram'}
               </button>
             ))}
           </div>
 
-          {/* Twitter Tab */}
           {activeTab === 'twitter' && (
-            <div className="space-y-3">
-              <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-                <p className="text-xs text-[#6B7280] mb-3">Key accounts covering the Iran conflict. Click to view their latest posts on X.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {twitterAccounts.map((account) => (
-                    <a
-                      key={account.handle}
-                      href={`https://twitter.com/${account.handle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2 border border-[#E5E7EB] rounded hover:bg-[#F9FAFB] no-underline"
-                      style={{ borderRadius: '4px' }}
-                    >
-                      <div className="w-8 h-8 bg-[#F3F4F6] rounded-full flex items-center justify-center text-[10px] font-bold text-[#6B7280]">
-                        {account.handle[0].toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-[#111827] truncate">{account.name}</div>
-                        <div className="text-[10px] text-[#9CA3AF]">@{account.handle}</div>
-                      </div>
-                      <span className={`px-1.5 py-0.5 text-[9px] font-medium rounded`}
-                        style={{
-                          borderRadius: '3px',
-                          backgroundColor: account.bias === 'OSINT' ? '#7C3AED18' : account.bias === 'Neutral' ? '#16A34A18' : '#2563EB18',
-                          color: account.bias === 'OSINT' ? '#7C3AED' : account.bias === 'Neutral' ? '#16A34A' : '#2563EB',
-                        }}
-                      >
-                        {account.bias}
-                      </span>
-                    </a>
-                  ))}
-                </div>
+            <div className="card p-4">
+              <p className="text-[12px] text-[#6B7280] mb-3">Key accounts covering the Iran conflict. Click to view latest posts on X.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {twitterAccounts.map((acc) => (
+                  <a key={acc.handle} href={`https://twitter.com/${acc.handle}`} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 p-2.5 border rounded-[4px] hover:bg-gray-50 no-underline transition-colors">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-bold text-[#6B7280] shrink-0">
+                      {acc.handle[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12px] font-medium text-[#111827] truncate">{acc.name}</div>
+                      <div className="text-[10px] text-[#9CA3AF]">@{acc.handle}</div>
+                    </div>
+                    <BiasTag bias={acc.bias} />
+                  </a>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Reddit Tab */}
           {activeTab === 'reddit' && (
             <div className="space-y-2">
               {reddit.isLoading && <FeedSkeleton count={8} />}
               {reddit.isError && <ErrorState message="Failed to fetch Reddit posts" onRetry={reddit.refetch} />}
               {reddit.data?.map((post) => {
-                const sentiment = analyzeSentiment(post.title);
+                const sent = analyzeSentiment(post.title);
+                const subClass = subredditColors[post.subreddit] || 'bg-gray-100 text-gray-600';
                 return (
-                  <div key={post.id} className="bg-white border border-[#E5E7EB] rounded-[6px] p-3">
+                  <a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" className="card block p-3 no-underline hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-medium text-[#7C3AED]">r/{post.subreddit}</span>
-                      <span className="text-[10px] font-mono text-[#9CA3AF]">{timeAgo(new Date(post.createdUtc * 1000).toISOString())}</span>
+                      <span className={`${subClass}`} style={{ padding: '1px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>r/{post.subreddit}</span>
+                      <span className="font-mono text-[11px] text-[#9CA3AF]">{timeAgo(post.createdUtc)}</span>
                     </div>
-                    <a href={post.permalink} target="_blank" rel="noopener noreferrer" className="no-underline">
-                      <h4 className="text-sm font-medium text-[#111827] hover:text-[#2563EB] leading-snug mb-1.5">
-                        {post.title}
-                      </h4>
-                    </a>
-                    <div className="flex items-center gap-3 text-[10px] text-[#6B7280]">
+                    <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#111827', lineHeight: '1.35', margin: '0 0 6px 0' }}>{post.title}</h4>
+                    <div className="flex items-center gap-3 text-[11px] text-[#6B7280]">
                       <span>{post.score} pts</span>
                       <span>{post.numComments} comments</span>
-                      <span className="font-mono" style={{ color: getSentimentColor(sentiment) }}>
-                        sentiment: {sentiment.toFixed(2)}
+                      <span className="font-mono" style={{ color: getSentimentColor(sent.comparative) }}>
+                        {sent.comparative.toFixed(2)}
                       </span>
                     </div>
-                  </div>
+                  </a>
                 );
               })}
             </div>
           )}
 
-          {/* Telegram Tab */}
           {activeTab === 'telegram' && (
-            <div className="space-y-3">
-              <p className="text-xs text-[#6B7280] mb-2">Key Telegram channels for Iran conflict updates. Links open in Telegram Web.</p>
+            <div className="space-y-2">
+              <p className="text-[12px] text-[#6B7280] mb-2">Key Telegram channels. Links open in Telegram Web.</p>
               {telegramChannels.map((ch) => (
-                <a
-                  key={ch.name}
-                  href={ch.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-white border border-[#E5E7EB] rounded-[6px] p-4 hover:bg-[#F9FAFB] no-underline"
-                >
+                <div key={ch.name} className="card p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                    <span className="text-sm font-medium text-[#111827]">{ch.name}</span>
+                    <span className="text-[13px] font-semibold text-[#111827]">{ch.name}</span>
+                    <BiasTag bias={ch.bias} />
                   </div>
-                  <p className="text-xs text-[#6B7280]">{ch.description}</p>
-                </a>
+                  <p className="text-[12px] text-[#6B7280]">{ch.description}</p>
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Right Column: Sentiment Dashboard (40%) */}
+        {/* Right: Sentiment Dashboard */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Overall Sentiment */}
-          <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-            <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Overall Sentiment</h3>
-            <div className="flex items-center justify-center">
-              <ResponsiveContainer width={180} height={120}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="100%"
-                    startAngle={180}
-                    endAngle={0}
-                    innerRadius={50}
-                    outerRadius={80}
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="text-center mt-2">
-              <div className="text-2xl font-bold font-mono" style={{ color: getSentimentColor(sentimentStats.avg) }}>
-                {(sentimentStats.avg * 100).toFixed(0)}
-              </div>
-              <div className="text-[10px] text-[#9CA3AF]">Scale: -100 to +100</div>
-            </div>
-            <div className="flex justify-center gap-4 mt-3 text-[10px]">
-              <span className="text-[#DC2626]">{sentimentStats.negative} negative</span>
+          {/* Gauge */}
+          <div className="card p-4 text-center">
+            <SectionHeader>Overall Sentiment</SectionHeader>
+            <svg viewBox="0 0 200 110" className="w-48 mx-auto">
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#E5E7EB" strokeWidth="12" strokeLinecap="round" />
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" strokeWidth="12" strokeLinecap="round"
+                strokeDasharray={`${(gaugeAngle / 180) * 251.2} 251.2`} />
+              <defs>
+                <linearGradient id="gaugeGrad"><stop offset="0%" stopColor="#DC2626" /><stop offset="50%" stopColor="#D97706" /><stop offset="100%" stopColor="#16A34A" /></linearGradient>
+              </defs>
+              <text x="100" y="95" textAnchor="middle" className="font-mono" style={{ fontSize: '28px', fontWeight: 700, fill: getSentimentColor(sentimentStats.avg) }}>{gaugeValue}</text>
+              <text x="100" y="108" textAnchor="middle" style={{ fontSize: '8px', fill: '#9CA3AF' }}>-100 to +100</text>
+            </svg>
+            <div className="flex justify-center gap-4 mt-2 text-[10px]">
+              <span className="text-[#DC2626]">{sentimentStats.negative} neg</span>
               <span className="text-[#D97706]">{sentimentStats.neutral} neutral</span>
-              <span className="text-[#16A34A]">{sentimentStats.positive} positive</span>
+              <span className="text-[#16A34A]">{sentimentStats.positive} pos</span>
             </div>
           </div>
 
-          {/* Sentiment Trend */}
-          <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-            <h3 className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Sentiment Trend</h3>
+          {/* Trend */}
+          <div className="card p-4">
+            <SectionHeader>Sentiment Trend</SectionHeader>
             {sentimentOverTime.length > 0 ? (
-              <ResponsiveContainer width="100%" height={150}>
+              <ResponsiveContainer width="100%" height={140}>
                 <LineChart data={sentimentOverTime}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis dataKey="hour" tick={{ fontSize: 9, fill: '#9CA3AF' }} />
-                  <YAxis tick={{ fontSize: 9, fill: '#9CA3AF' }} domain={[-1, 1]} />
+                  <XAxis dataKey="hour" tick={{ fontSize: 9, fontFamily: 'JetBrains Mono', fill: '#9CA3AF' }} />
+                  <YAxis tick={{ fontSize: 9, fontFamily: 'JetBrains Mono', fill: '#9CA3AF' }} domain={[-5, 5]} />
                   <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} />
-                  <Line type="monotone" dataKey="sentiment" stroke="#DC2626" dot={false} />
+                  <Line type="monotone" dataKey="sentiment" stroke="#DC2626" dot={false} strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="h-[150px] flex items-center justify-center text-xs text-[#9CA3AF]">Calculating trend...</div>
-            )}
+            ) : <div className="h-[140px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Calculating...</div>}
           </div>
 
           {/* Top Positive */}
-          <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-            <h3 className="text-[11px] font-semibold text-[#16A34A] uppercase tracking-wider mb-3">Top Positive Headlines</h3>
+          <div className="card p-4">
+            <SectionHeader>Most Positive Headlines</SectionHeader>
             <div className="space-y-2">
-              {topPositive.length > 0 ? topPositive.map((a) => (
-                <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer" className="block text-xs text-[#374151] hover:text-[#2563EB] no-underline leading-snug">
-                  {a.title}
-                  <span className="ml-1 font-mono text-[#16A34A]">[+{(a.sentiment || 0).toFixed(2)}]</span>
+              {topPositive.filter(a => a.sentiment > 0).length > 0 ? topPositive.filter(a => a.sentiment > 0).map((a) => (
+                <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer" className="block border-l-[3px] border-l-[#16A34A] pl-3 no-underline hover:bg-gray-50 py-1 transition-colors">
+                  <div className="text-[12px] text-[#111827] leading-snug">{a.title}</div>
+                  <span className="font-mono text-[10px] text-[#16A34A]">+{a.sentiment.toFixed(2)}</span>
                 </a>
-              )) : (
-                <p className="text-xs text-[#9CA3AF]">No positive headlines found</p>
-              )}
+              )) : <p className="text-[11px] text-[#9CA3AF]">No positive headlines found</p>}
             </div>
           </div>
 
           {/* Top Negative */}
-          <div className="bg-white border border-[#E5E7EB] rounded-[6px] p-4">
-            <h3 className="text-[11px] font-semibold text-[#DC2626] uppercase tracking-wider mb-3">Top Negative Headlines</h3>
+          <div className="card p-4">
+            <SectionHeader>Most Negative Headlines</SectionHeader>
             <div className="space-y-2">
-              {topNegative.length > 0 ? topNegative.map((a) => (
-                <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer" className="block text-xs text-[#374151] hover:text-[#2563EB] no-underline leading-snug">
-                  {a.title}
-                  <span className="ml-1 font-mono text-[#DC2626]">[{(a.sentiment || 0).toFixed(2)}]</span>
+              {topNegative.filter(a => a.sentiment < 0).length > 0 ? topNegative.filter(a => a.sentiment < 0).map((a) => (
+                <a key={a.id} href={a.url} target="_blank" rel="noopener noreferrer" className="block border-l-[3px] border-l-[#DC2626] pl-3 no-underline hover:bg-gray-50 py-1 transition-colors">
+                  <div className="text-[12px] text-[#111827] leading-snug">{a.title}</div>
+                  <span className="font-mono text-[10px] text-[#DC2626]">{a.sentiment.toFixed(2)}</span>
                 </a>
-              )) : (
-                <p className="text-xs text-[#9CA3AF]">No negative headlines found</p>
-              )}
+              )) : <p className="text-[11px] text-[#9CA3AF]">No negative headlines found</p>}
             </div>
           </div>
         </div>
