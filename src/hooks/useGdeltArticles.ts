@@ -16,8 +16,14 @@ export interface Article {
 }
 
 function parseGdeltDate(seendate: string): string {
-  if (!seendate || seendate.length < 14) return new Date().toISOString();
-  return `${seendate.slice(0, 4)}-${seendate.slice(4, 6)}-${seendate.slice(6, 8)}T${seendate.slice(8, 10)}:${seendate.slice(10, 12)}:${seendate.slice(12, 14)}Z`;
+  if (!seendate) return new Date().toISOString();
+  // GDELT returns dates in format "YYYYMMDDTHHMMSSZ" or "YYYYMMDDHHMMSS"
+  const cleaned = seendate.replace(/[TZ]/g, '');
+  if (cleaned.length < 14) return new Date().toISOString();
+  const iso = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}T${cleaned.slice(8, 10)}:${cleaned.slice(10, 12)}:${cleaned.slice(12, 14)}Z`;
+  // Validate the parsed date
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? new Date().toISOString() : iso;
 }
 
 function autoTag(title: string, publishedAt: string): string[] {
@@ -52,25 +58,29 @@ export function useGdeltArticles() {
     queryKey: ['gdelt-articles'],
     queryFn: async (): Promise<Article[]> => {
       const data = await fetchGdeltArticles();
-      const articles = data.articles || [];
-      return articles.map((a: { title: string; url: string; domain: string; seendate: string; socialimage: string }) => {
-        const publishedAt = parseGdeltDate(a.seendate);
-        const sentResult = analyzeSentiment(a.title);
-        return {
-          id: generateId(a.title, a.domain),
-          title: a.title,
-          description: '',
-          url: a.url,
-          imageUrl: a.socialimage || undefined,
-          source: a.domain,
-          publishedAt,
-          sentiment: sentResult.comparative,
-          tags: autoTag(a.title, publishedAt),
-        };
-      });
+      // GDELT wraps articles in an "articles" array
+      const rawArticles = Array.isArray(data?.articles) ? data.articles : Array.isArray(data) ? data : [];
+      return rawArticles
+        .filter((a: Record<string, unknown>) => a && typeof a.title === 'string' && a.title.trim())
+        .map((a: { title: string; url: string; domain: string; seendate: string; socialimage: string }) => {
+          const publishedAt = parseGdeltDate(a.seendate);
+          const sentResult = analyzeSentiment(a.title);
+          return {
+            id: generateId(a.title, a.domain || 'unknown'),
+            title: a.title,
+            description: '',
+            url: a.url || '',
+            imageUrl: a.socialimage || undefined,
+            source: a.domain || 'Unknown',
+            publishedAt,
+            sentiment: sentResult.comparative,
+            tags: autoTag(a.title, publishedAt),
+          };
+        });
     },
     refetchInterval: 2 * 60 * 1000,
     staleTime: 60 * 1000,
+    retry: 3,
   });
 }
 
@@ -79,14 +89,18 @@ export function useGdeltTimeline() {
     queryKey: ['gdelt-timeline'],
     queryFn: async () => {
       const data = await fetchGdeltTimeline();
-      const series = data.timeline?.[0]?.data || [];
-      return series.map((d: { date: string; value: number }) => ({
-        date: d.date,
-        count: d.value,
-      }));
+      // GDELT timeline response: { timeline: [{ series: "...", data: [{date, value}] }] }
+      const series = data?.timeline?.[0]?.data || [];
+      return series
+        .filter((d: Record<string, unknown>) => d && d.date && typeof d.value === 'number')
+        .map((d: { date: string; value: number }) => ({
+          date: d.date,
+          count: d.value,
+        }));
     },
     refetchInterval: 5 * 60 * 1000,
     staleTime: 2 * 60 * 1000,
+    retry: 3,
   });
 }
 
@@ -95,13 +109,17 @@ export function useGdeltTone() {
     queryKey: ['gdelt-tone'],
     queryFn: async () => {
       const data = await fetchGdeltTone();
-      return (data.timeline?.[0]?.data || []).map((d: { date: string; value: number }) => ({
-        date: d.date,
-        tone: d.value,
-      }));
+      const series = data?.timeline?.[0]?.data || [];
+      return series
+        .filter((d: Record<string, unknown>) => d && d.date && typeof d.value === 'number')
+        .map((d: { date: string; value: number }) => ({
+          date: d.date,
+          tone: d.value,
+        }));
     },
     refetchInterval: 5 * 60 * 1000,
     staleTime: 2 * 60 * 1000,
+    retry: 3,
   });
 }
 
@@ -136,13 +154,17 @@ export function useGeopoliticsNews() {
         topics.map(async (t) => {
           try {
             const data = await fetchGdeltTopicArticles(t.query);
-            const articles = (data.articles || []).slice(0, 5).map((a: { title: string; url: string; domain: string; seendate: string }) => ({
-              id: generateId(a.title, a.domain),
-              title: a.title,
-              url: a.url,
-              source: a.domain,
-              publishedAt: parseGdeltDate(a.seendate),
-            }));
+            const rawArticles = Array.isArray(data?.articles) ? data.articles : [];
+            const articles = rawArticles
+              .filter((a: Record<string, unknown>) => a && typeof a.title === 'string' && a.title.trim())
+              .slice(0, 5)
+              .map((a: { title: string; url: string; domain: string; seendate: string }) => ({
+                id: generateId(a.title, a.domain || 'unknown'),
+                title: a.title,
+                url: a.url || '',
+                source: a.domain || 'Unknown',
+                publishedAt: parseGdeltDate(a.seendate),
+              }));
             return { key: t.key, articles };
           } catch {
             return { key: t.key, articles: [] };

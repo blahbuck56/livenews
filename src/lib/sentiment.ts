@@ -1,6 +1,11 @@
 import Sentiment from 'sentiment';
 
-const analyzer = new Sentiment();
+let analyzer: Sentiment | null = null;
+try {
+  analyzer = new Sentiment();
+} catch {
+  // Sentiment package failed to initialize — will use fallback
+}
 
 export interface SentimentResult {
   score: number;
@@ -10,13 +15,20 @@ export interface SentimentResult {
 }
 
 export function analyzeSentiment(text: string): SentimentResult {
-  const result = analyzer.analyze(text);
-  return {
-    score: result.score,
-    comparative: result.comparative,
-    positive: result.positive,
-    negative: result.negative,
-  };
+  if (!analyzer) {
+    return { score: 0, comparative: 0, positive: [], negative: [] };
+  }
+  try {
+    const result = analyzer.analyze(text);
+    return {
+      score: result.score,
+      comparative: result.comparative,
+      positive: result.positive,
+      negative: result.negative,
+    };
+  } catch {
+    return { score: 0, comparative: 0, positive: [], negative: [] };
+  }
 }
 
 export function getSentimentColor(comparative: number): string {

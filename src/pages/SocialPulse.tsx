@@ -200,7 +200,7 @@ export default function SocialPulse() {
                   <Line type="monotone" dataKey="sentiment" stroke="#DC2626" dot={false} strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
-            ) : <div className="h-[140px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Calculating...</div>}
+            ) : <div className="h-[140px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Awaiting article data for sentiment trend...</div>}
           </div>
 
           {/* Top Positive */}

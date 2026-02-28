@@ -11,6 +11,15 @@ import SectionHeader from '../components/common/SectionHeader';
 const CARTO_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 const monoTick = { fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fill: '#9CA3AF' };
 
+// Parse GDELT date (YYYYMMDDHHMMSS or YYYYMMDDTHHMMSSZ) to "HH:MM" label
+function gdeltDateToTimeLabel(dateStr: string): string {
+  if (!dateStr) return '??';
+  const cleaned = dateStr.replace(/[TZ]/g, '');
+  if (cleaned.length >= 12) return cleaned.slice(8, 10) + ':' + cleaned.slice(10, 12);
+  if (cleaned.length >= 10) return cleaned.slice(8, 10) + ':00';
+  return dateStr.slice(0, 10);
+}
+
 export default function Dashboard() {
   const { articles, isLoading } = useCombinedNews();
   const timeline = useGdeltTimeline();
@@ -27,8 +36,8 @@ export default function Dashboard() {
   }, [articles]);
 
   const sentimentColor = avgSentiment > 0.5 ? '#16A34A' : avgSentiment < -0.5 ? '#DC2626' : '#D97706';
-  const timelineData = (timeline.data || []).slice(-48).map((d: { date: string; count: number }) => ({ time: d.date?.slice(8, 10) + ':' + (d.date?.slice(10, 12) || '00'), count: d.count }));
-  const toneData = (tone.data || []).slice(-48).map((d: { date: string; tone: number }) => ({ time: d.date?.slice(8, 10) + ':' + (d.date?.slice(10, 12) || '00'), tone: d.tone }));
+  const timelineData = (timeline.data || []).slice(-48).map((d: { date: string; count: number }) => ({ time: gdeltDateToTimeLabel(d.date), count: d.count }));
+  const toneData = (tone.data || []).slice(-48).map((d: { date: string; tone: number }) => ({ time: gdeltDateToTimeLabel(d.date), tone: d.tone }));
   const topSources = useMemo(() => {
     const freq: Record<string, number> = {};
     for (const a of articles) freq[a.source] = (freq[a.source] || 0) + 1;
@@ -60,7 +69,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={timelineData}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis dataKey="time" tick={monoTick} /><YAxis tick={monoTick} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4, fontFamily: 'JetBrains Mono' }} /><Area type="monotone" dataKey="count" stroke="#DC2626" fill="#DC2626" fillOpacity={0.1} /></AreaChart>
               </ResponsiveContainer>
-            ) : <div className="h-[220px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Loading...</div>}
+            ) : <div className="h-[220px] flex items-center justify-center text-[12px] text-[#9CA3AF]">{timeline.isError ? 'Failed to load timeline data' : 'No timeline data available'}</div>}
           </div>
         )}
         {tone.isLoading ? <ChartSkeleton /> : (
@@ -70,7 +79,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={toneData}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis dataKey="time" tick={monoTick} /><YAxis tick={monoTick} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4, fontFamily: 'JetBrains Mono' }} /><Line type="monotone" dataKey="tone" stroke="#DC2626" dot={false} strokeWidth={2} /></LineChart>
               </ResponsiveContainer>
-            ) : <div className="h-[220px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Loading...</div>}
+            ) : <div className="h-[220px] flex items-center justify-center text-[12px] text-[#9CA3AF]">{tone.isError ? 'Failed to load sentiment data' : 'No sentiment data available'}</div>}
           </div>
         )}
       </div>
@@ -96,7 +105,7 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={topSources} layout="vertical" margin={{ left: 80 }}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis type="number" tick={monoTick} /><YAxis type="category" dataKey="name" tick={{ ...monoTick, fill: '#6B7280' }} width={80} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} /><Bar dataKey="count" fill="#2563EB" radius={[0, 3, 3, 0]} /></BarChart>
             </ResponsiveContainer>
-          ) : <div className="h-[300px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Loading...</div>}
+          ) : <div className="h-[300px] flex items-center justify-center text-[12px] text-[#9CA3AF]">{isLoading ? 'Loading...' : 'No source data available'}</div>}
         </div>
       </div>
 
@@ -108,7 +117,7 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={keywords.slice(0, 15)} layout="vertical" margin={{ left: 60 }}><CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" /><XAxis type="number" tick={monoTick} /><YAxis type="category" dataKey="word" tick={{ ...monoTick, fill: '#6B7280' }} width={60} /><Tooltip contentStyle={{ fontSize: 11, borderRadius: 4 }} /><Bar dataKey="count" fill="#7C3AED" radius={[0, 3, 3, 0]} /></BarChart>
             </ResponsiveContainer>
-          ) : <div className="h-[300px] flex items-center justify-center text-[12px] text-[#9CA3AF]">Analyzing...</div>}
+          ) : <div className="h-[300px] flex items-center justify-center text-[12px] text-[#9CA3AF]">{isLoading ? 'Analyzing...' : 'No keyword data available'}</div>}
         </div>
         <div className="card p-4">
           <SectionHeader>Key Entities</SectionHeader>

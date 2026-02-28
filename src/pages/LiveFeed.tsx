@@ -1,12 +1,32 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useCombinedNews } from '../hooks/useGdeltArticles';
 import { extractKeywords } from '../lib/keywords';
+import { allSources } from '../data/sources';
 import { FeedSkeleton } from '../components/common/LoadingSkeleton';
 import ErrorState from '../components/common/ErrorState';
 import SectionHeader from '../components/common/SectionHeader';
 import BiasTag from '../components/common/BiasTag';
 
 const categories = ['Wire', 'Western', 'Regional', 'Independent', 'State', 'OSINT'];
+
+// Build a domain → bias mapping from known sources
+const domainBiasMap: Record<string, string> = {};
+for (const s of allSources) {
+  try {
+    const domain = new URL(s.url).hostname.replace('www.', '');
+    domainBiasMap[domain] = s.bias;
+  } catch { /* skip invalid URLs */ }
+}
+
+function getArticleBias(source: string): string {
+  const domain = source.replace('www.', '').toLowerCase();
+  if (domainBiasMap[domain]) return domainBiasMap[domain];
+  // Fuzzy match: check if known domain includes the source or vice versa
+  for (const [knownDomain, bias] of Object.entries(domainBiasMap)) {
+    if (domain.includes(knownDomain) || knownDomain.includes(domain)) return bias;
+  }
+  return 'unknown';
+}
 const quickLinks = [
   { name: 'Liveuamap Iran', url: 'https://iran.liveuamap.com', color: '#7C3AED' },
   { name: 'Iran Monitor', url: 'https://iranmonitor.org', color: '#7C3AED' },
@@ -57,6 +77,10 @@ export default function LiveFeed() {
 
   const filtered = useMemo(() => {
     let list = articles;
+    if (filters.size > 0) {
+      const activeFilters = new Set([...filters].map((f) => f.toLowerCase()));
+      list = list.filter((a) => activeFilters.has(getArticleBias(a.source)));
+    }
     if (breakingOnly) list = list.filter((a) => a.tags.includes('BREAKING'));
     if (hasImageOnly) list = list.filter((a) => a.imageUrl);
     return list;
@@ -166,8 +190,14 @@ export default function LiveFeed() {
           </div>
 
           {isLoading && <FeedSkeleton count={8} />}
-          {isError && <ErrorState message="Failed to fetch news from GDELT" onRetry={refetch} />}
-          {!isLoading && !isError && (
+          {isError && <ErrorState message="Failed to fetch news from GDELT. Check your network connection." onRetry={refetch} />}
+          {!isLoading && !isError && filtered.length === 0 && (
+            <div className="card p-8 text-center">
+              <div className="text-[14px] text-[#6B7280] mb-2">{articles.length === 0 ? 'No articles loaded yet' : 'No articles match your filters'}</div>
+              <div className="text-[12px] text-[#9CA3AF]">{articles.length === 0 ? 'Fetching from GDELT API...' : 'Try adjusting your source or breaking filters'}</div>
+            </div>
+          )}
+          {!isLoading && !isError && filtered.length > 0 && (
             <div className="space-y-3">
               {filtered.slice(0, visibleCount).map((article) => {
                 const isBreaking = article.tags.includes('BREAKING');
