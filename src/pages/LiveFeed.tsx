@@ -7,7 +7,17 @@ import ErrorState from '../components/common/ErrorState';
 import SectionHeader from '../components/common/SectionHeader';
 import BiasTag from '../components/common/BiasTag';
 
-const categories = ['Wire', 'Western', 'Regional', 'Independent', 'State', 'OSINT'];
+// Filter categories must match actual bias values from the source database
+const categories = [
+  { label: 'Neutral / Wire', bias: 'neutral' },
+  { label: 'Western', bias: 'western' },
+  { label: 'Regional', bias: 'regional' },
+  { label: 'Independent', bias: 'independent' },
+  { label: 'State Media', bias: 'state' },
+  { label: 'OSINT', bias: 'osint' },
+  { label: 'Israeli', bias: 'israeli' },
+  { label: 'Opposition', bias: 'opposition' },
+];
 
 // Build a domain → bias mapping from known sources
 const domainBiasMap: Record<string, string> = {};
@@ -78,8 +88,8 @@ export default function LiveFeed() {
   const filtered = useMemo(() => {
     let list = articles;
     if (filters.size > 0) {
-      const activeFilters = new Set([...filters].map((f) => f.toLowerCase()));
-      list = list.filter((a) => activeFilters.has(getArticleBias(a.source)));
+      // filters now stores bias values directly (e.g., 'neutral', 'western')
+      list = list.filter((a) => filters.has(getArticleBias(a.source)));
     }
     if (breakingOnly) list = list.filter((a) => a.tags.includes('BREAKING'));
     if (hasImageOnly) list = list.filter((a) => a.imageUrl);
@@ -88,9 +98,9 @@ export default function LiveFeed() {
 
   const trending = useMemo(() => extractKeywords(articles.map((a) => a.title), 15), [articles]);
 
-  const toggleFilter = (c: string) => {
+  const toggleFilter = (bias: string) => {
     const n = new Set(filters);
-    n.has(c) ? n.delete(c) : n.add(c);
+    n.has(bias) ? n.delete(bias) : n.add(bias);
     setFilters(n);
   };
 
@@ -100,9 +110,10 @@ export default function LiveFeed() {
         <SectionHeader>Source Filters</SectionHeader>
         <div className="space-y-2">
           {categories.map((c) => (
-            <label key={c} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-1 py-0.5 rounded-[3px] transition-colors">
-              <input type="checkbox" checked={filters.has(c)} onChange={() => toggleFilter(c)} className="w-3.5 h-3.5 accent-[#111827]" />
-              <span className="text-[12px] text-[#374151]">{c}</span>
+            <label key={c.bias} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-1 py-0.5 rounded-[3px] transition-colors">
+              <input type="checkbox" checked={filters.has(c.bias)} onChange={() => toggleFilter(c.bias)} className="w-3.5 h-3.5 accent-[#111827]" />
+              <span className="text-[12px] text-[#374151]">{c.label}</span>
+              <BiasTag bias={c.bias} />
             </label>
           ))}
         </div>
@@ -208,8 +219,9 @@ export default function LiveFeed() {
                   >
                     <div className="flex gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span style={{ fontSize: '11px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' as const }}>{article.source}</span>
+                          <BiasTag bias={getArticleBias(article.source)} />
                           <span className="font-mono text-[11px] text-[#9CA3AF]">{timeAgo(article.publishedAt)}</span>
                         </div>
                         <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', letterSpacing: '-0.3px', lineHeight: '1.35', margin: '0 0 4px 0' }}>{article.title}</h3>

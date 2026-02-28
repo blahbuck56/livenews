@@ -11,9 +11,17 @@ import SectionHeader from '../components/common/SectionHeader';
 const CARTO_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 const monoTick = { fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fill: '#9CA3AF' };
 
-// Parse GDELT date (YYYYMMDDHHMMSS or YYYYMMDDTHHMMSSZ) to "HH:MM" label
+// Parse dates from GDELT (YYYYMMDDTHHMMSSZ) or ISO format to "HH:MM" label
 function gdeltDateToTimeLabel(dateStr: string): string {
   if (!dateStr) return '??';
+  // Handle ISO format from fallback data (2026-02-28T14:30:00.000Z)
+  if (dateStr.includes('-')) {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+    }
+  }
+  // Handle GDELT format (YYYYMMDDTHHMMSSZ)
   const cleaned = dateStr.replace(/[TZ]/g, '');
   if (cleaned.length >= 12) return cleaned.slice(8, 10) + ':' + cleaned.slice(10, 12);
   if (cleaned.length >= 10) return cleaned.slice(8, 10) + ':00';
