@@ -7,6 +7,7 @@ const navLinks = [
   { to: '/social', label: 'Social Pulse' },
   { to: '/video', label: 'Live Video' },
   { to: '/geopolitics', label: 'Global Impact' },
+  { to: '/business', label: 'Trade Impact' },
   { to: '/sources', label: 'Sources' },
 ];
 

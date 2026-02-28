@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import SocialPulse from './pages/SocialPulse'
 import LiveVideo from './pages/LiveVideo'
 import Geopolitics from './pages/Geopolitics'
+import BusinessImpact from './pages/BusinessImpact'
 import Sources from './pages/Sources'
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/social" element={<SocialPulse />} />
         <Route path="/video" element={<LiveVideo />} />
         <Route path="/geopolitics" element={<Geopolitics />} />
+        <Route path="/business" element={<BusinessImpact />} />
         <Route path="/sources" element={<Sources />} />
       </Routes>
       <Footer />
