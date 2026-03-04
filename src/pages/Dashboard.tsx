@@ -4,8 +4,9 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import { useCombinedNews, useGdeltTimeline, useGdeltTone } from '../hooks/useGdeltArticles';
 import { computeEscalationIndex } from '../hooks/useConflictData';
 import { extractKeywords, extractEntities } from '../lib/keywords';
-import { strikeLocations } from '../data/strikeLocations';
-import { timelineEvents } from '../data/timelineEvents';
+import { computeMarketMetrics } from '../lib/dynamicData';
+import { getStrikeLocations } from '../data/strikeLocations';
+import { getTimelineEvents } from '../data/timelineEvents';
 import { MetricSkeleton, ChartSkeleton } from '../components/common/LoadingSkeleton';
 import SectionHeader from '../components/common/SectionHeader';
 
@@ -67,6 +68,9 @@ export default function Dashboard() {
   }, [articles]);
   const keywords = useMemo(() => extractKeywords(articles.map((a) => a.title), 20), [articles]);
   const entities = useMemo(() => extractEntities(articles.map((a) => a.title)), [articles]);
+  const market = useMemo(() => computeMarketMetrics(articles), [articles]);
+  const strikeLocations = useMemo(() => getStrikeLocations(), []);
+  const timelineEvents = useMemo(() => getTimelineEvents(), []);
 
   return (
     <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
@@ -171,9 +175,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
         <div className="card p-4">
           <SectionHeader>Oil Price (Brent Crude)</SectionHeader>
-          <div className="text-[22px] sm:text-[28px] font-bold text-[#D97706] font-mono leading-none mb-1">$94.82</div>
-          <div className="text-[12px] text-[#DC2626]">+$6.34 (+7.2%) since strikes began</div>
-          <div className="text-[10px] font-mono text-[#9CA3AF] mt-2">Delayed feed. Markets volatile.</div>
+          <div className="text-[22px] sm:text-[28px] font-bold text-[#D97706] font-mono leading-none mb-1">${market.oilPrice.toFixed(2)}</div>
+          <div className="text-[12px] text-[#DC2626]">+${market.oilChange.toFixed(2)} (+{market.oilChangePct}%) conflict premium</div>
+          <div className="text-[10px] font-mono text-[#9CA3AF] mt-2">Derived from article sentiment analysis</div>
         </div>
         <div className="card p-4">
           <SectionHeader>Conflict Escalation Index</SectionHeader>

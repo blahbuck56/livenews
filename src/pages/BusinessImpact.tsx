@@ -4,6 +4,15 @@ import { MapContainer, TileLayer, CircleMarker, Polyline, Popup } from 'react-le
 import { useQuery } from '@tanstack/react-query';
 import { fetchGdeltTopicArticles } from '../lib/api';
 import { analyzeSentiment } from '../lib/sentiment';
+import { useCombinedNews } from '../hooks/useGdeltArticles';
+import {
+  computeMarketMetrics,
+  generateLiveCommodityTimeline,
+  computeChokepointRisks,
+  computeTradeImpacts,
+  computeCurrencyImpacts,
+  generateCrossBorderAlerts,
+} from '../lib/dynamicData';
 import { MetricSkeleton, ChartSkeleton } from '../components/common/LoadingSkeleton';
 import SectionHeader from '../components/common/SectionHeader';
 
@@ -14,17 +23,12 @@ const monoTick = { fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fill: 
 // Trade corridor & chokepoint data
 // ============================================================
 
-const chokepoints = [
-  { name: 'Strait of Hormuz', lat: 26.56, lng: 56.25, status: 'BLOCKED', dailyBarrels: '21M bbl/day', pctGlobal: '21%', risk: 10, color: '#DC2626',
-    detail: 'Effectively closed. Military operations ongoing. Insurance premiums up 400%.' },
-  { name: 'Bab el-Mandeb', lat: 12.6, lng: 43.3, status: 'HIGH RISK', dailyBarrels: '6.2M bbl/day', pctGlobal: '9%', risk: 8, color: '#D97706',
-    detail: 'Houthi anti-ship attacks ongoing. Multiple tankers hit. Rerouting via Cape of Good Hope.' },
-  { name: 'Suez Canal', lat: 30.46, lng: 32.35, status: 'DISRUPTED', dailyBarrels: '5.5M bbl/day', pctGlobal: '12% trade', risk: 6, color: '#D97706',
-    detail: 'Operating but transit volumes down 35%. Elevated security posture. Higher surcharges.' },
-  { name: 'Turkish Straits', lat: 41.12, lng: 29.05, status: 'MONITORING', dailyBarrels: '3.2M bbl/day', pctGlobal: '3%', risk: 3, color: '#2563EB',
-    detail: 'Turkey restricting military vessel transit. Commercial shipping normal.' },
-  { name: 'Strait of Malacca', lat: 1.4, lng: 103.8, status: 'NORMAL', dailyBarrels: '16M bbl/day', pctGlobal: '25%', risk: 2, color: '#16A34A',
-    detail: 'No direct impact yet. Asian buyers seeking alternative crude sources.' },
+const chokepointGeo = [
+  { name: 'Strait of Hormuz', lat: 26.56, lng: 56.25, dailyBarrels: '21M bbl/day', pctGlobal: '21%' },
+  { name: 'Bab el-Mandeb', lat: 12.6, lng: 43.3, dailyBarrels: '6.2M bbl/day', pctGlobal: '9%' },
+  { name: 'Suez Canal', lat: 30.46, lng: 32.35, dailyBarrels: '5.5M bbl/day', pctGlobal: '12% trade' },
+  { name: 'Turkish Straits', lat: 41.12, lng: 29.05, dailyBarrels: '3.2M bbl/day', pctGlobal: '3%' },
+  { name: 'Strait of Malacca', lat: 1.4, lng: 103.8, dailyBarrels: '16M bbl/day', pctGlobal: '25%' },
 ];
 
 const tradeRoutes: [number, number][][] = [
@@ -36,49 +40,8 @@ const tradeRoutes: [number, number][][] = [
   [[12.6, 43.3], [5.0, 45.0], [-5.0, 42.0], [-15.0, 40.0], [-34.0, 18.0]],
 ];
 
-// ============================================================
-// Commodity & market impact data (simulated real-time)
-// ============================================================
-
-function generateCommodityTimeline(base: number, volatility: number, trend: number): { day: string; price: number }[] {
-  const data: { day: string; price: number }[] = [];
-  let price = base - trend * 14;
-  for (let i = 14; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 86400000);
-    const label = `${d.getMonth() + 1}/${d.getDate()}`;
-    price += trend + (Math.random() - 0.4) * volatility;
-    data.push({ day: label, price: Number(price.toFixed(2)) });
-  }
-  return data;
-}
-
-const brentData = generateCommodityTimeline(88, 2.5, 0.6);
-const goldData = generateCommodityTimeline(2180, 30, 8);
-const natGasData = generateCommodityTimeline(2.8, 0.15, 0.05);
-const shippingData = generateCommodityTimeline(1800, 200, 80);
-
-// ============================================================
-// Cross-border trade impact sectors
-// ============================================================
-
-const tradeImpactSectors = [
-  { sector: 'Crude Oil & Gas', impact: -38, volume: '$890B/yr', status: 'SEVERE', color: '#DC2626',
-    detail: 'Hormuz blockage halts 21% of global oil transit. Spot prices spiking. LNG rerouting.' },
-  { sector: 'Petrochemicals', impact: -29, volume: '$420B/yr', status: 'SEVERE', color: '#DC2626',
-    detail: 'Iranian exports halted. Gulf state output disrupted. Plastics/fertilizer feedstock shortage.' },
-  { sector: 'Container Shipping', impact: -22, volume: '$1.2T/yr', status: 'HIGH', color: '#D97706',
-    detail: 'Suez traffic down 35%. Rerouting via Cape adds 10-14 days. Rates up 180%.' },
-  { sector: 'Agriculture & Food', impact: -18, volume: '$310B/yr', status: 'HIGH', color: '#D97706',
-    detail: 'Fertilizer shortages from petrochemical disruption. Wheat/grain shipments delayed.' },
-  { sector: 'Automotive & Mfg', impact: -14, volume: '$680B/yr', status: 'MODERATE', color: '#D97706',
-    detail: 'Energy cost pass-through. Supply chain delays for Gulf-sourced components.' },
-  { sector: 'Financial Services', impact: -12, volume: '$2.1T/yr', status: 'MODERATE', color: '#D97706',
-    detail: 'Sanctions compliance burden. SWIFT restrictions widening. Correspondent banking disrupted.' },
-  { sector: 'Tech & Electronics', impact: -8, volume: '$950B/yr', status: 'LOW-MOD', color: '#2563EB',
-    detail: 'Indirect via energy costs. Semiconductor supply unaffected. Data center power costs up.' },
-  { sector: 'Pharma & Medical', impact: -5, volume: '$380B/yr', status: 'LOW', color: '#16A34A',
-    detail: 'Humanitarian exemptions apply. Some logistics delays for Middle East-routed supplies.' },
-];
+// Commodity timeline and trade impact data are now computed dynamically
+// from live article sentiment — see dynamicData.ts
 
 const sanctionsTracker = [
   { entity: 'Central Bank of Iran', type: 'Financial', date: 'Active', scope: 'Full block — no USD clearing' },
@@ -90,26 +53,7 @@ const sanctionsTracker = [
   { entity: 'Third-party facilitators', type: 'Enforcement', date: 'New', scope: 'UAE/Turkey intermediaries targeted' },
 ];
 
-const currencyImpact = [
-  { currency: 'IRR/USD', change: '-42%', direction: 'down', detail: 'Rial in freefall on black market. Official rate suspended.' },
-  { currency: 'SAR/USD', change: '-0.1%', direction: 'stable', detail: 'Peg holding. Saudi reserves adequate.' },
-  { currency: 'TRY/USD', change: '-3.8%', direction: 'down', detail: 'Lira weakening on regional instability.' },
-  { currency: 'AED/USD', change: '-0.05%', direction: 'stable', detail: 'Dirham peg stable. Safe haven flows.' },
-  { currency: 'INR/USD', change: '-2.1%', direction: 'down', detail: 'Rupee pressured by oil import costs.' },
-  { currency: 'CNY/USD', change: '-0.8%', direction: 'down', detail: 'Yuan slightly weaker. PBoC intervening.' },
-];
-
-const crossBorderAlerts = [
-  { severity: 'CRITICAL', title: 'Strait of Hormuz transit suspended for commercial vessels', time: '2h ago', category: 'Shipping' },
-  { severity: 'CRITICAL', title: 'OFAC issues emergency guidance on Iran-related sanctions expansion', time: '4h ago', category: 'Compliance' },
-  { severity: 'HIGH', title: 'Lloyd\'s of London suspends war risk coverage for Persian Gulf transit', time: '5h ago', category: 'Insurance' },
-  { severity: 'HIGH', title: 'Container rates Asia→Europe surge 180% on Suez uncertainty', time: '6h ago', category: 'Freight' },
-  { severity: 'HIGH', title: 'EU announces emergency oil reserve release of 50M barrels', time: '8h ago', category: 'Energy' },
-  { severity: 'MEDIUM', title: 'India diverts 12 tankers to alternative crude sources', time: '10h ago', category: 'Trade' },
-  { severity: 'MEDIUM', title: 'Turkish banks halt Iranian correspondent banking services', time: '12h ago', category: 'Finance' },
-  { severity: 'MEDIUM', title: 'WTO emergency consultation on trade disruption measures', time: '14h ago', category: 'Policy' },
-  { severity: 'LOW', title: 'Singapore LNG spot market sees 25% volume increase', time: '16h ago', category: 'Energy' },
-];
+// Currency impact and cross-border alerts are now computed dynamically from live articles
 
 // ============================================================
 // Business news hook
@@ -173,6 +117,7 @@ const statusColor: Record<string, string> = {
 
 export default function BusinessImpact() {
   const tradeNews = useTradeNews();
+  const { articles } = useCombinedNews();
   const [activeTab, setActiveTab] = useState<'overview' | 'corridors' | 'sanctions' | 'merkantis'>('overview');
 
   const tabs = [
@@ -182,10 +127,27 @@ export default function BusinessImpact() {
     { key: 'merkantis' as const, label: 'Merkantis Impact' },
   ];
 
+  // All market data derived from live article sentiment
+  const market = useMemo(() => computeMarketMetrics(articles), [articles]);
+  const brentData = useMemo(() => generateLiveCommodityTimeline(market.oilPrice, 2.5, market.oilChange / 14), [market.oilPrice, market.oilChange]);
+  const goldData = useMemo(() => generateLiveCommodityTimeline(market.goldPrice, 30, market.goldChange / 14), [market.goldPrice, market.goldChange]);
+  const natGasData = useMemo(() => generateLiveCommodityTimeline(market.natGasPrice, 0.15, market.natGasChange / 14), [market.natGasPrice, market.natGasChange]);
+  const shippingData = useMemo(() => generateLiveCommodityTimeline(market.freightIndex, 200, (market.freightIndex - 1200) / 14), [market.freightIndex]);
+  const chokepointRisks = useMemo(() => computeChokepointRisks(articles), [articles]);
+  const tradeImpactSectors = useMemo(() => computeTradeImpacts(articles), [articles]);
+  const currencyImpact = useMemo(() => computeCurrencyImpacts(articles), [articles]);
+  const crossBorderAlerts = useMemo(() => generateCrossBorderAlerts(articles), [articles]);
+
+  // Merge chokepoint geo with computed risk
+  const chokepoints = useMemo(() => chokepointGeo.map(cp => {
+    const risk = chokepointRisks[cp.name] || { status: 'NORMAL', risk: 1, color: '#16A34A', detail: 'No data.' };
+    return { ...cp, ...risk };
+  }), [chokepointRisks]);
+
   const avgTradeImpact = useMemo(() => {
     const total = tradeImpactSectors.reduce((s, t) => s + t.impact, 0);
     return (total / tradeImpactSectors.length).toFixed(1);
-  }, []);
+  }, [tradeImpactSectors]);
 
   return (
     <div className="max-w-[1800px] mx-auto px-3 sm:px-4 py-3 sm:py-4">
@@ -224,9 +186,9 @@ export default function BusinessImpact() {
             <div className="card p-3 sm:p-4">
               <SectionHeader>Brent Crude</SectionHeader>
               <div className="text-[22px] sm:text-[28px] font-bold font-mono leading-none text-[#D97706]">
-                ${brentData[brentData.length - 1].price}
+                ${market.oilPrice.toFixed(2)}
               </div>
-              <div className="text-[11px] text-[#DC2626] mt-1">+$8.40 (+9.6%) since conflict</div>
+              <div className="text-[11px] text-[#DC2626] mt-1">+${market.oilChange.toFixed(2)} (+{market.oilChangePct}%) conflict premium</div>
             </div>
             <div className="card p-3 sm:p-4">
               <SectionHeader>Avg Trade Impact</SectionHeader>
@@ -236,9 +198,9 @@ export default function BusinessImpact() {
             <div className="card p-3 sm:p-4">
               <SectionHeader>Freight Rate Index</SectionHeader>
               <div className="text-[22px] sm:text-[28px] font-bold font-mono leading-none text-[#D97706]">
-                ${shippingData[shippingData.length - 1].price.toLocaleString()}
+                ${market.freightIndex.toLocaleString()}
               </div>
-              <div className="text-[11px] text-[#DC2626] mt-1">+180% from pre-conflict</div>
+              <div className="text-[11px] text-[#DC2626] mt-1">+{market.freightChangePct}% from baseline</div>
             </div>
             <div className="card p-3 sm:p-4">
               <SectionHeader>Chokepoints at Risk</SectionHeader>

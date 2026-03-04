@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useCombinedNews } from '../hooks/useGdeltArticles';
 import { timeAgo } from '../hooks/useConflictData';
 import { extractKeywords } from '../lib/keywords';
+import { computeSituationStatus } from '../lib/dynamicData';
 import { allSources } from '../data/sources';
 import { FeedSkeleton } from '../components/common/LoadingSkeleton';
 import ErrorState from '../components/common/ErrorState';
@@ -50,16 +51,7 @@ const liveTv = [
   { name: 'Sky News', url: 'https://www.youtube.com/watch?v=9Auq9mYxFEE', bias: 'western' },
   { name: 'France 24', url: 'https://www.youtube.com/watch?v=Ap-UM1O9RBk', bias: 'neutral' },
 ];
-const situationStatus = [
-  { label: 'Conflict', value: 'ACTIVE COMBAT', color: '#DC2626' },
-  { label: 'Iran Net', value: '4% BLACKOUT', color: '#DC2626' },
-  { label: 'Iran Air', value: 'CLOSED', color: '#DC2626' },
-  { label: 'Gulf Air', value: 'QA/KW/AE CLOSED', color: '#DC2626' },
-  { label: 'Israel', value: 'EMERGENCY', color: '#DC2626' },
-  { label: 'U.S. Op', value: 'Epic Fury', color: '#111827' },
-  { label: 'IDF Op', value: 'Roar of the Lion', color: '#111827' },
-  { label: 'Duration', value: 'Multi-Day', color: '#D97706' },
-];
+// situationStatus is now computed dynamically from live articles in the component
 
 
 
@@ -90,6 +82,7 @@ export default function LiveFeed() {
   }, [articles, filters, breakingOnly, hasImageOnly]);
 
   const trending = useMemo(() => extractKeywords(articles.map((a) => a.title), 15), [articles]);
+  const situationStatus = useMemo(() => computeSituationStatus(articles), [articles]);
 
   const toggleFilter = (bias: string) => {
     const n = new Set(filters);
