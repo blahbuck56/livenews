@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import Navbar from './components/layout/Navbar'
 import BottomTicker from './components/layout/BottomTicker'
 import Footer from './components/layout/Footer'
@@ -27,6 +28,7 @@ export default function App() {
       </Routes>
       <Footer />
       <BottomTicker />
+      <Analytics />
     </div>
   )
 }
